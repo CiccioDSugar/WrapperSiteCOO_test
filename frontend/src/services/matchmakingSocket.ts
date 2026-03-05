@@ -9,10 +9,10 @@ class MatchmakingSocket {
       return this.socket;
     }
 
-    this.socket = io('http://localhost', {
+    this.socket = io('/', { // Usa la radice dinamica
       path: "/matchmaking_api/socket.io",
       transports: ['websocket'],
-      reconnection: false, // se si disconnette = leave queue
+      reconnection: false,
     });
 
     this.socket.on('connect', () => {

@@ -3,6 +3,7 @@ import { inputStyle } from '../styles/shared';
 import * as Icons from '../components/Icons';
 import * as authService from '../services/authService';
 import welcomeScene from '../../assets/welcomeScene.png';
+import { theme } from '../../configs/theme';
 
 interface LoginPageProps {
   onLogin: () => void;
@@ -53,9 +54,8 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
       display: "flex", 
       alignItems: "center", 
       justifyContent: "center",
-      background: `radial-gradient(circle at center, rgba(200,170,110,0.06) 0%, transparent 60%),
-        radial-gradient(circle at 20% 80%, rgba(10,200,185,0.04) 0%, transparent 90%)`,
-      backgroundImage: `url(${welcomeScene})`,
+      backgroundColor: theme.colors.bgDark,
+      backgroundImage: `radial-gradient(circle at center, rgba(200,170,110,0.06) 0%, transparent 60%), radial-gradient(circle at 20% 80%, rgba(10,200,185,0.04) 0%, transparent 90%), url(${welcomeScene})`,
       backgroundSize: 'cover',
       backgroundPosition: 'center',
       backgroundRepeat: 'no-repeat',
@@ -67,8 +67,8 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
         position: "absolute", 
         inset: 0, 
         pointerEvents: "none",
-        background: `radial-gradient(1px 1px at 20% 30%, rgba(200,170,110,0.3), transparent),
-          radial-gradient(1px 1px at 80% 70%, rgba(200,170,110,0.2), transparent),
+        background: `radial-gradient(1px 1px at 20% 30%, ${theme.colors.goldGlow}, transparent),
+          radial-gradient(1px 1px at 80% 70%, ${theme.colors.goldSubtle}, transparent),
           radial-gradient(1px 1px at 50% 50%, rgba(200,170,110,0.15), transparent)`,
         backgroundSize: "200px 200px, 300px 300px, 250px 250px",
       }} />
@@ -78,9 +78,9 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
         width: "440px", 
         height: "440px", 
         borderRadius: "50%",
-        background: "radial-gradient(circle at center, rgba(10,20,40,0.0) 0%, rgba(1,10,19,0.0) 70%)",
+        background: `radial-gradient(circle at center, ${theme.colors.bgPanel}00 0%, ${theme.colors.bgDark}00 70%)`,
         transform: 'translateY(70px)',
-        border: "1px solid var(--border-gold)", 
+        border: `1px solid ${theme.colors.border}`, 
         animation: "orbPulse 4s ease-in-out infinite",
         display: "flex", 
         flexDirection: "column", 
@@ -89,10 +89,11 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
         padding: "60px 50px", 
         position: "relative",
       }}>
-        <h1 className="font-cinzel" style={{
+        <h1 style={{
           fontSize: mode === "login" ? "22px" : "20px", 
           fontWeight: 700,
-          background: "linear-gradient(180deg, var(--gold-light), var(--gold), var(--gold-dark))",
+          fontFamily: theme.fonts.heading,
+          background: `linear-gradient(180deg, ${theme.colors.goldBright}, ${theme.colors.goldDark}, ${theme.colors.goldDark})`,
           WebkitBackgroundClip: "text", 
           WebkitTextFillColor: "transparent",
           marginBottom: "4px", 
@@ -104,8 +105,8 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
           {mode === "register" && "Join the Arena"}
           {mode === "forgot" && "Reset Password"}
         </h1>
-        <p className="font-cinzel" style={{ color: "var(--text-muted)", fontSize: "13px", letterSpacing: "2px", marginBottom: "28px", textTransform: "uppercase" }}>
-          {mode === "login" && "Enter the Battlefield"}
+        <p style={{ fontFamily: theme.fonts.heading, color: theme.colors.bgDark, fontSize: "13px", letterSpacing: "2px", marginBottom: "28px", textTransform: "uppercase" }}>
+          {mode === "login" && "Ade against Zeus"}
           {mode === "register" && "Forge Your Legend"}
           {mode === "forgot" && "Recover Access"}
         </p>
@@ -116,18 +117,16 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
             padding: "8px 12px", 
             marginBottom: "12px",
             background: "rgba(232,64,87,0.15)", 
-            border: "1px solid var(--accent-red)",
+            border: `1px solid ${theme.colors.dead}`,
             borderRadius: "2px", 
-            color: "var(--accent-red)", 
+            color: theme.colors.dead, 
+            fontFamily: theme.fonts.mono,
             fontSize: "13px", 
             textAlign: "center",
           }}>{error}</div>
         )}
 
-        <div style={{ width: "100%",
-           display: "flex", 
-           flexDirection: "column", 
-           gap: "12px" }}>
+        <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: "12px" }}>
           {(mode === "login" || mode === "register") && (
             <input className="input-glow" type="text" placeholder="Username" value={formData.username}
               onChange={(e) => setFormData({ ...formData, username: e.target.value })} style={inputStyle} />
@@ -141,8 +140,8 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
               <input className="input-glow" type={showPassword ? "text" : "password"} placeholder="Password" value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })} style={{ ...inputStyle, paddingRight: "44px" }} />
               <button type="button" onClick={() => setShowPassword(!showPassword)}
-                style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer", padding: "4px", display: "flex" }}>
-                {showPassword ? <Icons.EyeOff /> : <Icons.Eye />}
+                style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: theme.colors.textMuted, cursor: "pointer", padding: "4px", display: "flex" }}>
+                {showPassword ? <Icons.EyeOff size={18} /> : <Icons.Eye size={18} />}
               </button>
             </div>
           )}
@@ -157,9 +156,9 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
           {/* Submit */}
           <button className="btn-press" type="button" onClick={handleSubmit} disabled={loading} style={{
             width: "100%", padding: "12px",
-            background: loading ? "var(--text-muted)" : "linear-gradient(180deg, var(--gold), var(--gold-dark))",
-            border: "none", borderRadius: "2px", color: "var(--bg-darkest)",
-            fontFamily: "'Cinzel', serif", fontSize: "13px", fontWeight: 700,
+            background: loading ? theme.colors.textMuted : `linear-gradient(180deg, ${theme.colors.gold}, ${theme.colors.goldDark})`,
+            border: "none", borderRadius: "2px", color: theme.colors.goldDark,
+            fontFamily: theme.fonts.heading, fontSize: "13px", fontWeight: 700,
             letterSpacing: "2px", textTransform: "uppercase",
             cursor: loading ? "wait" : "pointer", transition: "all 0.2s", marginTop: "4px",
           }}>
@@ -170,8 +169,8 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
           {mode !== "forgot" && (
             <button type="button" className="btn-press" onClick={authService.redirectToGoogle} style={{
               width: "100%", padding: "10px", background: "rgba(255,255,255,0.05)",
-              border: "1px solid var(--border-gold)", borderRadius: "2px",
-              color: "var(--text-secondary)", fontFamily: "'Cinzel', serif", fontSize: "11px",
+              border: `1px solid ${theme.colors.border}`, borderRadius: "2px",
+              color: theme.colors.goldDark, fontFamily: theme.fonts.heading, fontSize: "11px",
               fontWeight: 600, letterSpacing: "1px", cursor: "pointer",
               display: "flex", alignItems: "center", justifyContent: "center", gap: "10px", transition: "all 0.2s",
             }}>
@@ -184,16 +183,16 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
         <div style={{ marginTop: "16px", textAlign: "center" }}>
           {mode === "login" && (
             <>
-              <button onClick={() => switchMode("register")} style={{ background: "none", border: "none", color: "var(--accent-blue)", cursor: "pointer", fontFamily: "'Crimson Text', serif", fontSize: "14px" }}>Create an account</button>
-              <span style={{ color: "var(--text-muted)", margin: "0 8px" }}>·</span>
-              <button onClick={() => switchMode("forgot")} style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer", fontFamily: "'Crimson Text', serif", fontSize: "14px" }}>Forgot password?</button>
+              <button onClick={() => switchMode("register")} style={{ background: "none", border: "none", color: theme.colors.bgDark, cursor: "pointer", fontFamily: theme.fonts.mono, fontSize: "13px" }}>Create an account</button>
+              <span style={{ color: theme.colors.textMuted, margin: "0 8px" }}>·</span>
+              <button onClick={() => switchMode("forgot")} style={{ background: "none", border: "none", color: theme.colors.bgDark, cursor: "pointer", fontFamily: theme.fonts.mono, fontSize: "13px" }}>Forgot password?</button>
             </>
           )}
           {mode === "register" && (
-            <button onClick={() => switchMode("login")} style={{ background: "none", border: "none", color: "var(--accent-blue)", cursor: "pointer", fontFamily: "'Crimson Text', serif", fontSize: "14px" }}>Already have an account? Sign in</button>
+            <button onClick={() => switchMode("login")} style={{ background: "none", border: "none", color: theme.colors.zeus, cursor: "pointer", fontFamily: theme.fonts.mono, fontSize: "13px" }}>Already have an account? Sign in</button>
           )}
           {mode === "forgot" && (
-            <button onClick={() => switchMode("login")} style={{ background: "none", border: "none", color: "var(--accent-blue)", cursor: "pointer", fontFamily: "'Crimson Text', serif", fontSize: "14px" }}>Back to login</button>
+            <button onClick={() => switchMode("login")} style={{ background: "none", border: "none", color: theme.colors.zeus, cursor: "pointer", fontFamily: theme.fonts.mono, fontSize: "13px" }}>Back to login</button>
           )}
         </div>
       </div>

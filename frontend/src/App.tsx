@@ -8,21 +8,13 @@ import ProfilePage from './site/pages/ProfilePage';
 import GameFlow from './site/pages/GameFlow';
 import Navbar from './site/components/Navbar';
 import { checkAuth, logout } from './site/services/authService';
-import { getMyProfile } from './site/services/apiService';
-
-export interface UserData {
-  id: number;
-  username: string;
-  avatarUrl: string;
-  email: string;
-  status: string;
-}
+import { getMyProfile, UserProfile } from './site/services/apiService';
+import { theme } from './configs/theme';
 
 export default function App() {
-  const [user, setUser] = useState<UserData | null>({ id: 1, username: 'TestPlayer', avatarUrl: '', email: '', status: 'ONLINE' });
-  const [isLoggedIn, setIsLoggedIn] = useState(true);
-  // const [isLoggedIn, setIsLoggedIn] = useState(false);
-  // const [user, setUser] = useState<UserData | null>(null);
+  // Sbloccato il flusso di auth reale, addio TestPlayer!
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [user, setUser] = useState<UserProfile | null>(null);
   const [currentPage, setCurrentPage] = useState('dashboard');
 
   useEffect(() => {
@@ -75,7 +67,7 @@ export default function App() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg-darkest)' }}>
+    <div style={{ minHeight: '100vh', backgroundColor: theme.colors.bgDark }}>
       <Navbar
         currentPage={currentPage}
         onNavigate={setCurrentPage}

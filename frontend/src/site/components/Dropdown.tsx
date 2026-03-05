@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { dropdownItemBase } from '../styles/shared';
-import React from 'react';
+import { theme } from '../../configs/theme';
 
 /* ─── Hook ─── */
 export function useDropdown() {
@@ -25,7 +25,7 @@ export function DropdownPanel({ isOpen, right = 0, minWidth = "220px", children 
   return (
     <div style={{
       position: "absolute", top: "calc(100% + 4px)", right,
-      minWidth, background: "var(--bg-dark)", border: "1px solid var(--border-gold)",
+      minWidth, background: theme.colors.bgDark, border: `1px solid ${theme.colors.border}`,
       borderRadius: "4px", padding: "8px 0",
       opacity: isOpen ? 1 : 0, transform: isOpen ? "translateY(0)" : "translateY(-8px)",
       pointerEvents: isOpen ? "all" : "none", transition: "all 0.2s ease",
@@ -44,8 +44,14 @@ export function DropdownItem({ icon: Icon, label, onClick }: {
     <button
       style={dropdownItemBase}
       onClick={onClick}
-      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--bg-surface-light)"; (e.currentTarget as HTMLElement).style.color = "var(--gold)"; }}
-      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "none"; (e.currentTarget as HTMLElement).style.color = "var(--text-secondary)"; }}
+      onMouseEnter={(e) => { 
+        e.currentTarget.style.background = theme.colors.bgPanel; 
+        e.currentTarget.style.color = theme.colors.gold; 
+      }}
+      onMouseLeave={(e) => { 
+        e.currentTarget.style.background = "none"; 
+        e.currentTarget.style.color = theme.colors.textSecondary; 
+      }}
     >
       <Icon size={16} /> {label}
     </button>

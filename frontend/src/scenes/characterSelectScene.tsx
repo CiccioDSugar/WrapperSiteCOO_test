@@ -111,7 +111,6 @@ export default function CharacterSelectScene({
       
       
     const payload = {
-      userDbId: userDbId,
       characterName: isSplitScreen ? [finalP1, finalP2] : [finalP1],
       rank: (mode === MatchMode.RANKED || mode === MatchMode.UNRANKED) ? 500 : null,
       rankRange: (mode === MatchMode.RANKED || mode === MatchMode.UNRANKED) ? 100 : null,

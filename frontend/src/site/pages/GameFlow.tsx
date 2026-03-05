@@ -39,7 +39,7 @@ export default function GameFlow({ userId, username, onExit }: GameFlowProps) {
   };
 
   const handleMatchFound = () => {
-    socketService.connect('http://localhost', String(userId));
+    socketService.connect('/', String(userId));
     setScene('game');
   };
 
