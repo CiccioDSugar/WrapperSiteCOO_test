@@ -1,11 +1,4 @@
-/**
- * API service — chiamate verso gli endpoint di Renato (user-service)
- * Tutte le chiamate usano fetchWithAuthRetry per gestire token scaduti.
- */
-
 import { fetchWithAuthRetry } from './authService';
-
-// ─── Profile ───
 
 export async function getMyProfile() {
   const res = await fetchWithAuthRetry('/api/users/me');
@@ -52,23 +45,17 @@ export async function updateAvatar(avatarUrl: string | null) {
   return res && res.ok;
 }
 
-// ─── Leaderboard ───
-
 export async function getLeaderboard(page = 1, limit = 20) {
   const res = await fetchWithAuthRetry(`/api/users/leaderboard?page=${page}&limit=${limit}`);
   if (!res || !res.ok) return null;
   return res.json();
 }
 
-// ─── Public profile ───
-
 export async function getPublicProfile(userId: number) {
   const res = await fetchWithAuthRetry(`/api/users/${userId}`);
   if (!res || !res.ok) return null;
   return res.json();
 }
-
-// ─── Availability checks ───
 
 export async function checkUsernameAvailable(username: string): Promise<boolean> {
   const res = await fetchWithAuthRetry(`/api/users/check/username?username=${encodeURIComponent(username)}`);

@@ -8,47 +8,82 @@ import ProfilePage from './site/pages/ProfilePage';
 import GameFlow from './site/pages/GameFlow';
 import Navbar from './site/components/Navbar';
 import { checkAuth, logout } from './site/services/authService';
-function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(true);
-  const [currentPage, setCurrentPage] = useState("dashboard");
+import { getMyProfile } from './site/services/apiService';
 
-  // Check existing session on mount
+export interface UserData {
+  id: number;
+  username: string;
+  avatarUrl: string;
+  email: string;
+  status: string;
+}
+
+export default function App() {
+  const [user, setUser] = useState<UserData | null>({ id: 1, username: 'TestPlayer', avatarUrl: '', email: '', status: 'ONLINE' });
+  const [isLoggedIn, setIsLoggedIn] = useState(true);
+  // const [isLoggedIn, setIsLoggedIn] = useState(false);
+  // const [user, setUser] = useState<UserData | null>(null);
+  const [currentPage, setCurrentPage] = useState('dashboard');
+
   useEffect(() => {
-    checkAuth().then((ok) => { if (ok) setIsLoggedIn(true); });
+    checkAuth().then(async (ok) => {
+      if (ok) {
+        const profile = await getMyProfile();
+        if (profile) {
+          setUser(profile);
+          setIsLoggedIn(true);
+        }
+      }
+    });
   }, []);
+
+  const handleLogin = async () => {
+    const profile = await getMyProfile();
+    if (profile) setUser(profile);
+    setIsLoggedIn(true);
+    setCurrentPage('dashboard');
+  };
 
   const handleLogout = async () => {
     await logout();
     setIsLoggedIn(false);
-    setCurrentPage("dashboard");
+    setUser(null);
+    setCurrentPage('dashboard');
   };
 
-  // Not authenticated → login
   if (!isLoggedIn) {
-    return <LoginPage onLogin={() => { setIsLoggedIn(true); setCurrentPage("dashboard"); }} />;
+    return <LoginPage onLogin={handleLogin} />;
   }
 
-  // In game → fullscreen, no navbar
-  if (currentPage === "play") {
-    return <GameFlow onExit={() => setCurrentPage("dashboard")} />;
+  if (currentPage === 'play' && user) {
+    return (
+      <GameFlow
+        userId={user.id}
+        username={user.username}
+        onExit={() => setCurrentPage('dashboard')}
+      />
+    );
   }
 
-  // Site pages with navbar
   const renderPage = () => {
     switch (currentPage) {
-      case "dashboard":    return <DashboardPage onNavigate={setCurrentPage} />;
-      case "leaderboard":  return <LeaderboardPage />;
-      case "profile":      return <ProfilePage />;
-      default:             return <DashboardPage onNavigate={setCurrentPage} />;
+      case 'dashboard':   return <DashboardPage onNavigate={setCurrentPage} />;
+      case 'leaderboard': return <LeaderboardPage />;
+      case 'profile':     return <ProfilePage />;
+      default:            return <DashboardPage onNavigate={setCurrentPage} />;
     }
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: "var(--bg-darkest)" }}>
-      <Navbar currentPage={currentPage} onNavigate={setCurrentPage} onLogout={handleLogout} notificationCount={3} />
+    <div style={{ minHeight: '100vh', background: 'var(--bg-darkest)' }}>
+      <Navbar
+        currentPage={currentPage}
+        onNavigate={setCurrentPage}
+        onLogout={handleLogout}
+        username={user?.username || ''}
+        avatarUrl={user?.avatarUrl || ''}
+      />
       {renderPage()}
     </div>
   );
 }
-
-export default App;
