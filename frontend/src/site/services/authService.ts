@@ -107,3 +107,21 @@ export async function forgotPassword(email: string): Promise<boolean> {
 export function redirectToGoogle(): void {
   window.location.href = "/api/auth/google";
 }
+
+export async function refreshToken(): Promise<boolean> {
+  try {
+    const res = await fetch("/api/auth/refresh", {
+      method: "POST",
+      credentials: "include",
+    });
+    if (!res.ok) {
+      console.warn("❌ Refresh failed");
+      return false;
+    }
+    console.log("🔄 Token refreshed");
+    return true;
+  } catch (error) {
+    console.error("Refresh error:", error);
+    return false;
+  }
+}

@@ -135,6 +135,7 @@ export async function getMyProfile(): Promise<UserProfile | null> {
     const res = await fetchWithAuthRetry('/api/users/me');
     if (!res || !res.ok) return null;
     return await res.json() as UserProfile;
+    console.log("DATI REALI DAL BACKEND:", res?.json());
   } catch (error) {
     console.error('[API] Error fetching profile:', error);
     return null;
