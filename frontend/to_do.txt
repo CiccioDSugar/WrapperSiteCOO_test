@@ -1,0 +1,8 @@
+ORDINE PRIORITARIO
+
+- Validazione dati in entrata frontend
+- Modifica email c'e' bisogna chiamare backend vedi branch Ale
+- Cambio password inserisci vecchia e nuova due volte
+- Revisione React State
+- Navbar non responsive
+- Lagcompensations

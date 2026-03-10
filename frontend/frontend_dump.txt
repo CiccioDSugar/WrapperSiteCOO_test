@@ -1,107 +1,110 @@
 
-===== src/App.tsx =====
-import { useState, useEffect } from 'react';
-import './site/styles/site.css';
-import LoginPage from './site/pages/LoginPage';
-import DashboardPage from './site/pages/DashboardPage';
-import LeaderboardPage from './site/pages/LeaderboardPage';
-import ProfilePage from './site/pages/ProfilePage';
-import GameFlow from './site/pages/GameFlow';
-import Navbar from './site/components/Navbar';
-import { checkAuth, logout } from './site/services/authService';
-import { getMyProfile, UserProfile } from './site/services/apiService';
-import { theme } from './configs/theme';
+=== src/App.tsx ===
+import { useState, useEffect } from "react";
+import "./site/styles/site.css";
+import LoginPage from "./site/pages/LoginPage";
+import DashboardPage from "./site/pages/DashboardPage";
+import LeaderboardPage from "./site/pages/LeaderboardPage";
+import ProfilePage from "./site/pages/ProfilePage";
+import GameFlow from "./site/pages/GameFlow";
+import Navbar from "./site/components/Navbar";
+import { logout } from "./site/services/authService";
+import { getMyProfile, UserProfile } from "./site/services/apiService";
+import { theme } from "./configs/theme";
 
 export default function App() {
-  // Sbloccato il flusso di auth reale, addio TestPlayer!
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [user, setUser] = useState<UserProfile | null>(null);
-//   const [user, setUser] = useState<UserProfile | null>({
-//   id: 1,
-//   username: 'TestPlayer',
-//   avatarUrl: 'https://api.dicebear.com/9.x/pixel-art/svg?seed=TestPlayer',
-//   email: 'test@test.com',
-//   status: 'ONLINE',
-//   createdAt: '2025-01-01T00:00:00Z',
-// });
-  const [currentPage, setCurrentPage] = useState('dashboard');
 
-  useEffect(() => {
-    checkAuth().then(async (ok) => {
-      if (ok) {
-        const profile = await getMyProfile();
-        if (profile) {
-          setUser(profile);
-          setIsLoggedIn(true);
-        }
-      }
-    });
-  }, []);
+	const [isLoggedIn, setIsLoggedIn] = useState(false);
+	const [user, setUser] = useState<UserProfile | null>(null);
+	const [currentPage, setCurrentPage] = useState("dashboard");
 
-  const handleLogin = async () => {
-    const profile = await getMyProfile();
+	useEffect(() => {
+    const initAuth = async () => {
+      	const profile = await getMyProfile();
+      		if (profile) {
+        		setUser(profile);
+        		setIsLoggedIn(true);
+      		}
+    	};
     
-    if (profile) {
-      setUser(profile);
-      setIsLoggedIn(true);
-      setCurrentPage('dashboard');
-    } else {
-      // Qui l'ideale sarebbe mostrare un messaggio di errore visivo
-      console.error("Login riuscito, ma impossibile recuperare il profilo.");
-      await logout(); // Puliamo l'eventuale cookie rimasto appeso
-      setIsLoggedIn(false);
-    }
-  };
+    	initAuth();
+  	}, []);
 
-  const handleLogout = async () => {
-    await logout();
-    setIsLoggedIn(false);
-    setUser(null);
-    setCurrentPage('dashboard');
-  };
+	const handleLogin = async () => {
+		const profile = await getMyProfile();
 
-  if (!isLoggedIn) {
-    return <LoginPage onLogin={handleLogin} />;
-  }
+		if (profile) {
+			setUser(profile);
+			setIsLoggedIn(true);
+			setCurrentPage("dashboard");
+		} else {
+			// Qui l'ideale sarebbe mostrare un messaggio di errore visivo
+			console.error(
+				"Login riuscito, ma impossibile recuperare il profilo.",
+			);
+			await logout(); // Puliamo l'eventuale cookie rimasto appeso
+			setIsLoggedIn(false);
+		}
+	};
 
-  if (currentPage === 'play') {
-    if (!user) {
-      alert("Errore di sessione: Dati utente mancanti. Effettua nuovamente il login."); // Sostitusci con una UI migliore
-      handleLogout(); 
-      return null; // Evitiamo render strani mentre l'app si ricarica verso il login
-    }
-    return (
-      <GameFlow
-        userId={user.id}
-        username={user.username}
-        onExit={() => setCurrentPage('dashboard')}
-      />
-    );
-  }
+	const handleLogout = async () => {
+		await logout();
+		setIsLoggedIn(false);
+		setUser(null);
+		setCurrentPage("dashboard");
+	};
 
-  const renderPage = () => {
-    switch (currentPage) {
-      case 'dashboard':   return <DashboardPage onNavigate={setCurrentPage} />;
-      case 'leaderboard': return <LeaderboardPage />;
-      case 'profile':     return <ProfilePage />;
-      default:            return <DashboardPage onNavigate={setCurrentPage} />;
-    }
-  };
+	if (!isLoggedIn) {
+		return <LoginPage onLogin={handleLogin} />;
+	}
 
-  return (
-    <div style={{ minHeight: '100vh', backgroundColor: theme.colors.bgDark }}>
-      <Navbar
-        currentPage={currentPage}
-        onNavigate={setCurrentPage}
-        onLogout={handleLogout}
-        username={user?.username || ''}
-        avatarUrl={user?.avatarUrl || ''}
-      />
-      {renderPage()}
-    </div>
-  );
+	if (currentPage === "play") {
+		if (!user) {
+			alert(
+				"Errore di sessione: Dati utente mancanti. Effettua nuovamente il login.",
+			); // Sostitusci con una UI migliore
+			handleLogout();
+			return null; // Evitiamo render strani mentre l'app si ricarica verso il login
+		}
+		return (
+			<GameFlow
+				userId={user.id}
+				username={user.username}
+				onExit={() => setCurrentPage("dashboard")}
+			/>
+		);
+	}
+
+	const renderPage = () => {
+		switch (currentPage) {
+			case "dashboard":
+				return <DashboardPage onNavigate={setCurrentPage} />;
+			case "leaderboard":
+				return <LeaderboardPage />;
+			case "profile":
+				return <ProfilePage />;
+			default:
+				return <DashboardPage onNavigate={setCurrentPage} />;
+		}
+	};
+
+	return (
+		<div
+			style={{ minHeight: "100vh", backgroundColor: theme.colors.bgDark }}
+		>
+			<Navbar
+				currentPage={currentPage}
+				onNavigate={setCurrentPage}
+				onLogout={handleLogout}
+				username={user?.username || ""}
+				avatarUrl={user?.avatarUrl || ""}
+			/>
+			{renderPage()}
+		</div>
+	);
 }
-===== src/main.tsx =====
+
+=== src/main.tsx ===
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App'
@@ -111,10 +114,11 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     <App />
 )
 
-===== src/vite-env.d.ts =====
+=== src/vite-env.d.ts ===
 // src/vite-env.d.ts
 /// <reference types="vite/client" />
-===== src/configs/logger.ts =====
+
+=== src/configs/logger.ts ===
 // utils/logger.ts
 // Sistema di logging condizionale.
 // In produzione (e in valutazione) la console resta pulita.
@@ -144,7 +148,8 @@ export const log = {
   warn:   (...args: unknown[]) => DEBUG && console.warn('⚠️', ...args),
   error:  (...args: unknown[]) => console.error('❌', ...args), // sempre attivo
 };
-===== src/configs/theme.ts =====
+
+=== src/configs/theme.ts ===
 export const theme = {
   colors: {
     // Base
@@ -196,7 +201,8 @@ export const theme = {
     xl: '40px',
   },
 };
-===== src/configs/auraConfig.ts =====
+
+=== src/configs/auraConfig.ts ===
 export const AURA_CONFIG = {
   zeus: {
     characterName: 'Zeus' as const,
@@ -283,7 +289,8 @@ export const AURA_CONFIG = {
 
 export type ZeusAuraConfig = typeof AURA_CONFIG.zeus;
 export type AdeAuraConfig = typeof AURA_CONFIG.ade;
-===== src/configs/config.ts =====
+
+=== src/configs/config.ts ===
 export const GameConfig = {
 	SERVER: {
 		TICK_RATE: 16,
@@ -328,7 +335,22 @@ export const GameConfig = {
     	INTERPOLATION_SPEED: 0.15,
   	},
 }
-===== src/site/styles/shared.ts =====
+
+=== src/storage/gameStore.ts ===
+import {create} from 'zustand';
+import {GameStatePayload} from '../types/game.types';
+
+interface GameStore {
+    gameState: GameStatePayload | null;
+    setGameState: (newState: GameStatePayload) => void;
+}
+
+export const useGameStore = create<GameStore>((set) => ({
+  gameState: null,
+  setGameState: (newState) => set({ gameState: newState }), 
+}));
+
+=== src/site/styles/shared.ts ===
 import React from 'react';
 import { theme } from '../../configs/theme';
 
@@ -389,49 +411,8 @@ export const sectionTitleStyle: React.CSSProperties = {
   textAlign: "center",
   fontFamily: theme.fonts.heading,
 };
-===== src/site/styles/site.css =====
-/* ─── Clash of Olympus — Global Site CSS ─── */
-@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap');
 
-* { margin: 0; padding: 0; box-sizing: border-box; }
-
-html { scroll-behavior: smooth; }
-
-body {
-  /* Valori esatti presi da theme.ts per il setup base */
-  background: #060e14;
-  color: #e8d5a3;
-  font-family: 'JetBrains Mono', monospace; 
-  overflow-x: hidden;
-  overflow-y: auto;
-}
-
-/* Scrollbar */
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: #060e14; }
-::-webkit-scrollbar-thumb { background: #3e341a; border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #e8d5a3; }
-
-/* ─── Animations ─── */
-@keyframes goldShimmer {
-  0% { background-position: -200% center; }
-  100% { background-position: 200% center; }
-}
-
-@keyframes orbPulse {
-  0%, 100% { box-shadow: 0 0 40px rgba(200, 170, 100, 0.3), 0 0 80px rgba(200, 170, 100, 0.1), inset 0 0 60px rgba(200, 170, 100, 0.05); }
-  50% { box-shadow: 0 0 60px rgba(200, 170, 100, 0.5), 0 0 120px rgba(200, 170, 100, 0.2), inset 0 0 80px rgba(200, 170, 100, 0.1); }
-}
-
-@keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-8px); }
-}
-
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-@keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes badgePop { 0% { transform: scale(0); } 50% { transform: scale(1.3); } 100% { transform: scale(1); } }
-===== src/site/pages/GameFlow.tsx =====
+=== src/site/pages/GameFlow.tsx ===
 import { useState, useEffect } from 'react';
 import ModeSelectScene from '../../scenes/modeSelectScene';
 import CharacterSelectScene from '../../scenes/characterSelectScene';
@@ -439,7 +420,7 @@ import QueueScene from '../../scenes/queueScene';
 import Game from '../../game/Game';
 import { socketService } from '../../services/socketServices';
 import { matchmakingSocket } from '../../services/matchmakingSocket';
-import { MatchMode } from '../../types/game.types';
+import { CharacterName, MatchMode } from '@transcendence/types';
 
 type GameScene = 'mode-select' | 'character-select' | 'queue' | 'game';
 
@@ -452,8 +433,8 @@ interface GameFlowProps {
 export default function GameFlow({ userId, username, onExit }: GameFlowProps) {
   const [scene, setScene] = useState<GameScene>('mode-select');
   const [selectedMode, setSelectedMode] = useState<MatchMode>(MatchMode.RANKED);
-  const [p1Character, setP1Character] = useState<'zeus' | 'ade'>('zeus');
-  const [p2Character, setP2Character] = useState<'zeus' | 'ade'>('ade');
+  const [p1Character, setP1Character] = useState<CharacterName>(CharacterName.ZEUS);
+  const [p2Character, setP2Character] = useState<CharacterName>(CharacterName.ADE);
 
   // Connetti matchmaking socket all'ingresso nel flusso di gioco
   useEffect(() => {
@@ -466,7 +447,7 @@ export default function GameFlow({ userId, username, onExit }: GameFlowProps) {
     setScene('character-select');
   };
 
-  const handleCharConfirm = (p1: 'zeus' | 'ade', p2: 'zeus' | 'ade') => {
+  const handleCharConfirm = (p1: CharacterName, p2: CharacterName) => {
     setP1Character(p1);
     setP2Character(p2);
     setScene('queue');
@@ -534,14 +515,16 @@ export default function GameFlow({ userId, username, onExit }: GameFlowProps) {
     </div>
   );
 }
-===== src/site/pages/ProfilePage.tsx =====
+
+=== src/site/pages/ProfilePage.tsx ===
 import { useState, useEffect } from 'react';
 import { inputStyle, sectionTitleStyle } from '../styles/shared';
 import * as Icons from '../components/Icons';
 import * as api from '../services/apiService';
-import { UserProfile, UserStats, UserSettings } from '../services/apiService';
+import { UserProfile, UserStats, UserSettings, generate2fa, turnOn2fa, turnOff2fa } from '../services/apiService';
 import { theme } from '../../configs/theme';
 import { NAVBAR_HEIGHT } from '../components/Navbar';
+import { CharacterName } from '@transcendence/types';
 
 const statusColor = (s: string) => 
   s === 'ONLINE' ? theme.colors.hpHigh : 
@@ -605,7 +588,11 @@ export default function ProfilePage() {
   const [stats, setStats] = useState<UserStats | null>(null);
   const [settings, setSettings] = useState<UserSettings | null>(null);
   const [loading, setLoading] = useState(true);
-  
+  const [isSettingUp2fa, setIsSettingUp2fa] = useState(false);
+  const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null);
+  const [setupCode, setSetupCode] = useState('');
+  const [error2fa, setError2fa] = useState('');
+
   const [editingUsername, setEditingUsername] = useState(false);
   const [editingEmail, setEditingEmail] = useState(false);
   const [tempVal, setTempVal] = useState('');
@@ -632,6 +619,40 @@ export default function ProfilePage() {
       setProfile((p) => p ? { ...p, email: tempVal } : null); 
     }
     setEditingEmail(false); 
+  };
+
+  // ⚡ LE FUNZIONI ORA SONO DENTRO IL COMPONENTE, DOVE DEVONO STARE
+  const handleEnable2faClick = async () => {
+    setError2fa('');
+    
+    const data = await generate2fa();
+    
+    if (data && data.qrCode) { 
+      setQrCodeUrl(data.qrCode);
+      setIsSettingUp2fa(true);
+    } else {
+      alert("Il backend non ha risposto correttamente. Guarda la console (F12)!");
+    }
+  };
+
+  const handleConfirm2fa = async () => {
+    setError2fa('');
+    const success = await turnOn2fa(setupCode);
+    if (success) {
+      setIsSettingUp2fa(false);
+      setQrCodeUrl(null);
+      setSetupCode('');
+      setSettings(prev => prev ? { ...prev, is2faEnabled: true } : null);
+    } else {
+      setError2fa("Codice errato. Riprova.");
+    }
+  };
+
+  const handleDisable2faClick = async () => {
+    const success = await turnOff2fa();
+    if (success) {
+      setSettings(prev => prev ? { ...prev, is2faEnabled: false } : null);
+    }
   };
 
   if (loading) return (
@@ -695,7 +716,7 @@ export default function ProfilePage() {
               {s.characterStats.map((cs) => (
                 <div key={cs.characterName} style={{ padding: '20px', background: theme.colors.bgPanel, border: `1px solid ${theme.colors.border}`, borderRadius: '4px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-                    <span style={{ fontSize: '20px' }}>{cs.characterName.toLowerCase() === 'zeus' ? '⚡' : '🔥'}</span>
+                    <span style={{ fontSize: '20px' }}>{cs.characterName === CharacterName.ZEUS ? '⚡' : '🔥'}</span>
                     <span style={{ fontFamily: theme.fonts.heading, fontWeight: 700, color: theme.colors.goldBright, letterSpacing: '1px', textTransform: 'uppercase' }}>{cs.characterName}</span>
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
@@ -730,26 +751,65 @@ export default function ProfilePage() {
       {/* Security */}
       <div id="profile-security" style={{ paddingTop: '80px', paddingBottom: '40px', scrollMarginTop: `${NAVBAR_HEIGHT}px` }}>
         <h2 style={{ ...sectionTitleStyle, fontSize: '22px', marginBottom: '24px' }}>Security & 2FA</h2>
+        
+        {/* ⚡ Blocco 2FA ripristinato con i bottoni corretti */}
         <div style={{ padding: '24px', background: theme.colors.bgPanel, border: `1px solid ${theme.colors.border}`, borderRadius: '4px', marginBottom: '12px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div>
               <div style={{ fontFamily: theme.fonts.heading, fontSize: '14px', fontWeight: 600, color: theme.colors.textPrimary, marginBottom: '4px' }}>Two-Factor Authentication</div>
               <div style={{ fontFamily: theme.fonts.mono, fontSize: '13px', color: sec.is2faEnabled ? theme.colors.hpHigh : theme.colors.textSecondary }}>{sec.is2faEnabled ? '✓ Enabled' : 'Not enabled'}</div>
             </div>
-            <button className="btn-press" style={{ 
-              padding: '8px 20px', 
-              background: sec.is2faEnabled ? 'none' : `linear-gradient(180deg, ${theme.colors.gold}, ${theme.colors.goldDark})`, 
-              border: sec.is2faEnabled ? `1px solid ${theme.colors.dead}` : 'none', 
-              borderRadius: '2px', 
-              color: sec.is2faEnabled ? theme.colors.dead : theme.colors.bgDark, 
-              fontFamily: theme.fonts.heading, 
-              fontSize: '11px', 
-              fontWeight: 700, 
-              letterSpacing: '1px', 
-              cursor: 'pointer' 
-            }}>{sec.is2faEnabled ? 'DISABLE' : 'ENABLE'}</button>
+            
+            {!sec.is2faEnabled && !isSettingUp2fa && (
+              <button className="btn-press" onClick={handleEnable2faClick} style={{ padding: '8px 20px', background: `linear-gradient(180deg, ${theme.colors.gold}, ${theme.colors.goldDark})`, border: 'none', borderRadius: '2px', color: theme.colors.bgDark, fontFamily: theme.fonts.heading, fontSize: '11px', fontWeight: 700, letterSpacing: '1px', cursor: 'pointer' }}>
+                ENABLE
+              </button>
+            )}
+            
+            {sec.is2faEnabled && (
+              <button className="btn-press" onClick={handleDisable2faClick} style={{ padding: '8px 20px', background: 'none', border: `1px solid ${theme.colors.dead}`, borderRadius: '2px', color: theme.colors.dead, fontFamily: theme.fonts.heading, fontSize: '11px', fontWeight: 700, letterSpacing: '1px', cursor: 'pointer' }}>
+                DISABLE
+              </button>
+            )}
           </div>
+
+          {/* Box con il QR Code */}
+          {isSettingUp2fa && (
+            <div style={{ marginTop: '24px', padding: '20px', border: `1px dashed ${theme.colors.goldDim}`, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
+              <p style={{ fontFamily: theme.fonts.mono, fontSize: '12px', color: theme.colors.textPrimary, textAlign: 'center' }}>
+                1. Inquadra questo QR con un'app come Google Authenticator o Authy.
+              </p>
+              
+              {qrCodeUrl && (
+                <div style={{ background: 'white', padding: '12px', borderRadius: '8px' }}>
+                  <img src={qrCodeUrl} alt="2FA QR Code" style={{ width: '160px', height: '160px' }} />
+                </div>
+              )}
+
+              <p style={{ fontFamily: theme.fonts.mono, fontSize: '12px', color: theme.colors.textPrimary, textAlign: 'center' }}>
+                2. Inserisci il codice a 6 cifre generato dall'app per confermare.
+              </p>
+              
+              <input 
+                className="input-glow" 
+                type="text" 
+                maxLength={6} 
+                value={setupCode}
+                onChange={(e) => setSetupCode(e.target.value)}
+                placeholder="123456"
+                style={{ ...inputStyle, width: '140px', textAlign: 'center', letterSpacing: '8px', fontSize: '18px', fontWeight: 'bold' }} 
+              />
+              
+              {error2fa && <div style={{ color: theme.colors.dead, fontFamily: theme.fonts.mono, fontSize: '12px' }}>{error2fa}</div>}
+
+              <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
+                <button onClick={() => setIsSettingUp2fa(false)} style={{ padding: '8px 20px', background: 'none', border: `1px solid ${theme.colors.border}`, color: theme.colors.textMuted, cursor: 'pointer' }}>Annulla</button>
+                <button onClick={handleConfirm2fa} style={{ padding: '8px 20px', background: theme.colors.hpHigh, border: 'none', color: theme.colors.bgDark, fontWeight: 'bold', cursor: 'pointer' }}>Conferma</button>
+              </div>
+            </div>
+          )}
         </div>
+
         <div style={{ padding: '24px', background: theme.colors.bgPanel, border: `1px solid ${theme.colors.border}`, borderRadius: '4px', marginBottom: '12px' }}>
           <div style={{ fontFamily: theme.fonts.heading, fontSize: '14px', fontWeight: 600, color: theme.colors.textPrimary, marginBottom: '4px' }}>Email Verification</div>
           <div style={{ fontFamily: theme.fonts.mono, fontSize: '13px', color: sec.isEmailVerified ? theme.colors.hpHigh : theme.colors.dead }}>{sec.isEmailVerified ? '✓ Verified' : '✗ Not verified'}</div>
@@ -773,7 +833,8 @@ export default function ProfilePage() {
     </div>
   );
 }
-===== src/site/pages/LoginPage.tsx =====
+
+=== src/site/pages/LoginPage.tsx ===
 import { useState, useCallback } from 'react';
 import { inputStyle } from '../styles/shared';
 import * as Icons from '../components/Icons';
@@ -799,11 +860,34 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
 
     try {
       if (mode === "login") {
-        const { ok, data } = await authService.login(
-          formData.username, formData.password, show2fa ? formData.totp : undefined
-        );
-        if (data.requires2fa) { setShow2fa(true); setLoading(false); return; }
-        if (ok) { onLogin(); } else { setError(data.message || data.error || "Login failed"); }
+        
+        // ⚡ SE LA 2FA È GIÀ VISIBILE, VERIFICHIAMO SOLO IL CODICE
+        if (show2fa) {
+          const { ok, data } = await authService.verify2fa(formData.totp);
+          if (ok) {
+            onLogin(); // Codice corretto, entra!
+          } else {
+            setError(data.message || data.error || "Invalid 2FA code");
+          }
+          setLoading(false);
+          return;
+        }
+
+        // ⚡ ALTRIMENTI, FACCIAMO IL LOGIN NORMALE
+        const { ok, data } = await authService.login(formData.username, formData.password);
+        
+        // Se il backend ci dice che serve la 2FA (tramite un flag o uno status code)
+        if (data.requires2fa || data.message === '2FA required') { 
+          setShow2fa(true); 
+          setLoading(false); 
+          return; 
+        }
+        
+        if (ok) { 
+          onLogin(); 
+        } else { 
+          setError(data.message || data.error || "Login failed"); 
+        }
 
       } else if (mode === "register") {
         const { ok, data } = await authService.register(formData.username, formData.email, formData.password);
@@ -831,7 +915,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
       alignItems: "center", 
       justifyContent: "center",
       backgroundColor: theme.colors.bgDark,
-      backgroundImage: `radial-gradient(circle at center, rgba(200,170,110,0.06) 0%, transparent 60%), radial-gradient(circle at 20% 80%, rgba(10,200,185,0.04) 0%, transparent 90%), url(${welcomeScene})`,
+      backgroundImage: `radial-gradient(circle at center, rgba(200,170,110,0.4) 0%, transparent 60%), radial-gradient(circle at 20% 80%, rgba(10,200,185,0.04) 0%, transparent 90%), url(${welcomeScene})`,
       backgroundSize: 'cover',
       backgroundPosition: 'center',
       backgroundRepeat: 'no-repeat',
@@ -854,7 +938,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
         width: "440px", 
         height: "440px", 
         borderRadius: "50%",
-        background: `radial-gradient(circle at center, ${theme.colors.bgPanel}00 0%, ${theme.colors.bgDark}00 70%)`,
+        background: `radial-gradient(circle at center, ${theme.colors.bgPanel}00 20%, ${theme.colors.bgDark}00 70%)`,
         transform: 'translateY(70px)',
         border: `1px solid ${theme.colors.border}`, 
         animation: "orbPulse 4s ease-in-out infinite",
@@ -975,7 +1059,8 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
     </div>
   );
 }
-===== src/site/pages/DashboardPage.tsx =====
+
+=== src/site/pages/DashboardPage.tsx ===
 import { sectionTitleStyle } from '../styles/shared';
 import { theme } from '../../configs/theme';
 import { NAVBAR_HEIGHT } from '../components/Navbar';
@@ -1120,7 +1205,8 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps) {
     </div>
   );
 }
-===== src/site/pages/LeaderboardPage.tsx =====
+
+=== src/site/pages/LeaderboardPage.tsx ===
 import { useState, useEffect } from 'react';
 import { inputStyle } from '../styles/shared';
 import * as Icons from '../components/Icons';
@@ -1214,133 +1300,58 @@ export default function LeaderboardPage() {
     </div>
   );
 }
-===== src/site/services/apiService.ts =====
-// import { fetchWithAuthRetry } from './authService';
 
-// export async function getMyProfile() {
-//   const res = await fetchWithAuthRetry('/api/users/me');
-//   if (!res || !res.ok) return null;
-//   return res.json();
-// }
-
-// export async function getMyStats() {
-//   const res = await fetchWithAuthRetry('/api/users/me/stats');
-//   if (!res || !res.ok) return null;
-//   return res.json();
-// }
-
-// export async function getMySettings() {
-//   const res = await fetchWithAuthRetry('/api/users/me/settings');
-//   if (!res || !res.ok) return null;
-//   return res.json();
-// }
-
-// export async function updateUsername(username: string) {
-//   const res = await fetchWithAuthRetry('/api/users/me/username', {
-//     method: 'PATCH',
-//     headers: { 'Content-Type': 'application/json' },
-//     body: JSON.stringify({ username }),
-//   });
-//   return res && res.ok;
-// }
-
-// export async function updateEmail(email: string) {
-//   const res = await fetchWithAuthRetry('/api/users/me/email', {
-//     method: 'PATCH',
-//     headers: { 'Content-Type': 'application/json' },
-//     body: JSON.stringify({ email }),
-//   });
-//   return res && res.ok;
-// }
-
-// export async function updateAvatar(avatarUrl: string | null) {
-//   const res = await fetchWithAuthRetry('/api/users/me/avatar', {
-//     method: 'PATCH',
-//     headers: { 'Content-Type': 'application/json' },
-//     body: JSON.stringify({ avatarUrl }),
-//   });
-//   return res && res.ok;
-// }
-
-// export async function getLeaderboard(page = 1, limit = 20) {
-//   const res = await fetchWithAuthRetry(`/api/users/leaderboard?page=${page}&limit=${limit}`);
-//   if (!res || !res.ok) return null;
-//   return res.json();
-// }
-
-// export async function getPublicProfile(userId: number) {
-//   const res = await fetchWithAuthRetry(`/api/users/${userId}`);
-//   if (!res || !res.ok) return null;
-//   return res.json();
-// }
-
-// export async function checkUsernameAvailable(username: string): Promise<boolean> {
-//   const res = await fetchWithAuthRetry(`/api/users/check/username?username=${encodeURIComponent(username)}`);
-//   if (!res || !res.ok) return false;
-//   const data = await res.json();
-//   return !data.exists;
-// }
-
-// export async function checkEmailAvailable(email: string): Promise<boolean> {
-//   const res = await fetchWithAuthRetry(`/api/users/check/email?email=${encodeURIComponent(email)}`);
-//   if (!res || !res.ok) return false;
-//   const data = await res.json();
-//   return !data.exists;
-// }
-import { fetchWithAuthRetry } from './authService';
-
-// ==========================================
-// 🛡️ INTERFACCE DATI (Addio "any"!)
-// ==========================================
+=== src/site/services/apiService.ts ===
+import { fetchWithAuthRetry } from "./authService";
 
 export interface UserProfile {
-  id: number;
-  username: string;
-  avatarUrl: string;
-  email: string;
-  status: 'ONLINE' | 'OFFLINE' | 'IN_GAME' | string;
-  createdAt: string;
+	id: number;
+	username: string;
+	avatarUrl: string;
+	email: string;
+	status: "ONLINE" | "OFFLINE" | "IN_GAME" | string;
+	createdAt: string;
 }
 
 export interface CharacterStat {
-  characterName: string;
-  wins: number;
-  losses: number;
-  kills: number;
-  deaths: number;
+	characterName: string;
+	wins: number;
+	losses: number;
+	kills: number;
+	deaths: number;
 }
 
 export interface UserStats {
-  eloCurrent: number;
-  eloPeak: number;
-  totalWins: number;
-  totalLosses: number;
-  totalDraws: number;
-  bestWinStreak: number;
-  totalKills: number;
-  totalDeaths: number;
-  characterStats: CharacterStat[];
+	eloCurrent: number;
+	eloPeak: number;
+	totalWins: number;
+	totalLosses: number;
+	totalDraws: number;
+	bestWinStreak: number;
+	totalKills: number;
+	totalDeaths: number;
+	characterStats: CharacterStat[];
 }
 
 export interface UserSettings {
-  is2faEnabled: boolean;
-  isEmailVerified: boolean;
-  linkedProviders: string[];
+	is2faEnabled: boolean;
+	isEmailVerified: boolean;
+	linkedProviders: string[];
 }
 
 export interface LeaderboardEntry {
-  id: number;
-  rank: number;
-  username: string;
-  avatarUrl: string;
-  eloCurrent: number;
-  totalWins: number;
-  totalLosses: number;
+	id: number;
+	rank: number;
+	username: string;
+	avatarUrl: string;
+	eloCurrent: number;
+	totalWins: number;
+	totalLosses: number;
 }
 
 export interface LeaderboardResponse {
-  entries: LeaderboardEntry[];
-  total?: number;
+	entries: LeaderboardEntry[];
+	total?: number;
 }
 
 // ==========================================
@@ -1348,255 +1359,329 @@ export interface LeaderboardResponse {
 // ==========================================
 
 export async function getMyProfile(): Promise<UserProfile | null> {
-  try {
-    const res = await fetchWithAuthRetry('/api/users/me');
-    if (!res || !res.ok) return null;
-    return await res.json() as UserProfile;
-    console.log("DATI REALI DAL BACKEND:", res?.json());
-  } catch (error) {
-    console.error('[API] Error fetching profile:', error);
-    return null;
-  }
+	try {
+		const res = await fetchWithAuthRetry("/api/users/me");
+		if (!res || !res.ok) return null;
+		return (await res.json()) as UserProfile;
+	} catch (error) {
+		console.error("[API] Error fetching profile:", error);
+		return null;
+	}
 }
 
 export async function getMyStats(): Promise<UserStats | null> {
-  try {
-    const res = await fetchWithAuthRetry('/api/users/me/stats');
-    if (!res || !res.ok) return null;
-    return await res.json() as UserStats;
-  } catch (error) {
-    console.error('[API] Error fetching stats:', error);
-    return null;
-  }
+	try {
+		const res = await fetchWithAuthRetry("/api/users/me/stats");
+		if (!res || !res.ok) return null;
+		return (await res.json()) as UserStats;
+	} catch (error) {
+		console.error("[API] Error fetching stats:", error);
+		return null;
+	}
 }
 
 export async function getMySettings(): Promise<UserSettings | null> {
-  try {
-    const res = await fetchWithAuthRetry('/api/users/me/settings');
-    if (!res || !res.ok) return null;
-    return await res.json() as UserSettings;
-  } catch (error) {
-    console.error('[API] Error fetching settings:', error);
-    return null;
-  }
+	try {
+		const res = await fetchWithAuthRetry("/api/users/me/settings");
+		if (!res || !res.ok) return null;
+		return (await res.json()) as UserSettings;
+	} catch (error) {
+		console.error("[API] Error fetching settings:", error);
+		return null;
+	}
 }
 
 export async function updateUsername(username: string): Promise<boolean> {
-  try {
-    const res = await fetchWithAuthRetry('/api/users/me/username', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username }),
-    });
-    return !!res && res.ok;
-  } catch (error) {
-    console.error('[API] Error updating username:', error);
-    return false;
-  }
+	try {
+		const res = await fetchWithAuthRetry("/api/users/me/username", {
+			method: "PATCH",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ username }),
+		});
+		return !!res && res.ok;
+	} catch (error) {
+		console.error("[API] Error updating username:", error);
+		return false;
+	}
 }
 
 export async function updateEmail(email: string): Promise<boolean> {
-  try {
-    const res = await fetchWithAuthRetry('/api/users/me/email', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email }),
-    });
-    return !!res && res.ok;
-  } catch (error) {
-    console.error('[API] Error updating email:', error);
-    return false;
-  }
+	try {
+		const res = await fetchWithAuthRetry("/api/users/me/email", {
+			method: "PATCH",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ email }),
+		});
+		return !!res && res.ok;
+	} catch (error) {
+		console.error("[API] Error updating email:", error);
+		return false;
+	}
 }
 
 export async function updateAvatar(avatarUrl: string | null): Promise<boolean> {
-  try {
-    const res = await fetchWithAuthRetry('/api/users/me/avatar', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ avatarUrl }),
-    });
-    return !!res && res.ok;
-  } catch (error) {
-    console.error('[API] Error updating avatar:', error);
-    return false;
-  }
+	try {
+		const res = await fetchWithAuthRetry("/api/users/me/avatar", {
+			method: "PATCH",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ avatarUrl }),
+		});
+		return !!res && res.ok;
+	} catch (error) {
+		console.error("[API] Error updating avatar:", error);
+		return false;
+	}
 }
 
-export async function getLeaderboard(page = 1, limit = 20): Promise<LeaderboardResponse | null> {
-  try {
-    const res = await fetchWithAuthRetry(`/api/users/leaderboard?page=${page}&limit=${limit}`);
-    if (!res || !res.ok) return null;
-    return await res.json() as LeaderboardResponse;
-  } catch (error) {
-    console.error('[API] Error fetching leaderboard:', error);
-    return null;
-  }
+export async function getLeaderboard(
+	page = 1,
+	limit = 20,
+): Promise<LeaderboardResponse | null> {
+	try {
+		const res = await fetchWithAuthRetry(
+			`/api/users/leaderboard?page=${page}&limit=${limit}`,
+		);
+		if (!res || !res.ok) return null;
+		return (await res.json()) as LeaderboardResponse;
+	} catch (error) {
+		console.error("[API] Error fetching leaderboard:", error);
+		return null;
+	}
 }
 
-export async function getPublicProfile(userId: number): Promise<UserProfile | null> {
-  try {
-    const res = await fetchWithAuthRetry(`/api/users/${userId}`);
-    if (!res || !res.ok) return null;
-    return await res.json() as UserProfile;
-  } catch (error) {
-    console.error('[API] Error fetching public profile:', error);
-    return null;
-  }
+export async function getPublicProfile(
+	userId: number,
+): Promise<UserProfile | null> {
+	try {
+		const res = await fetchWithAuthRetry(`/api/users/${userId}`);
+		if (!res || !res.ok) return null;
+		return (await res.json()) as UserProfile;
+	} catch (error) {
+		console.error("[API] Error fetching public profile:", error);
+		return null;
+	}
 }
 
-export async function checkUsernameAvailable(username: string): Promise<boolean> {
-  try {
-    const res = await fetchWithAuthRetry(`/api/users/check/username?username=${encodeURIComponent(username)}`);
-    if (!res || !res.ok) return false;
-    const data = await res.json();
-    return !data.exists;
-  } catch (error) {
-    console.error('[API] Error checking username:', error);
-    return false;
-  }
+export async function checkUsernameAvailable(
+	username: string,
+): Promise<boolean> {
+	try {
+		const res = await fetchWithAuthRetry(
+			`/api/users/check/username?username=${encodeURIComponent(username)}`,
+		);
+		if (!res || !res.ok) return false;
+		const data = await res.json();
+		return !data.exists;
+	} catch (error) {
+		console.error("[API] Error checking username:", error);
+		return false;
+	}
 }
 
 export async function checkEmailAvailable(email: string): Promise<boolean> {
+	try {
+		const res = await fetchWithAuthRetry(
+			`/api/users/check/email?email=${encodeURIComponent(email)}`,
+		);
+		if (!res || !res.ok) return false;
+		const data = await res.json();
+		return !data.exists;
+	} catch (error) {
+		console.error("[API] Error checking email:", error);
+		return false;
+	}
+}
+
+// --- 2FA SETUP ---
+
+export async function generate2fa() {
   try {
-    const res = await fetchWithAuthRetry(`/api/users/check/email?email=${encodeURIComponent(email)}`);
-    if (!res || !res.ok) return false;
-    const data = await res.json();
-    return !data.exists;
+    // ⚡ Aggiornato con la rotta esatta di Giovanni
+    const res = await fetchWithAuthRetry("/api/auth/2fa/setup", { method: "POST" });
+    if (!res || !res.ok) return null;
+    return await res.json(); 
   } catch (error) {
-    console.error('[API] Error checking email:', error);
+    console.error("[API] Error generating 2FA:", error);
+    return null;
+  }
+}
+
+export async function turnOn2fa(code: string): Promise<boolean> {
+  try {
+    // ⚡ Aggiornato con la rotta esatta di Giovanni
+    const res = await fetchWithAuthRetry("/api/auth/2fa/enable", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ code }),
+    });
+    return !!res && res.ok;
+  } catch (error) {
+    console.error("[API] Error turning on 2FA:", error);
     return false;
   }
 }
-===== src/site/services/authService.ts =====
+
+export async function turnOff2fa(): Promise<boolean> {
+  try {
+    // ⚡ Aggiornato con la rotta esatta di Giovanni
+    const res = await fetchWithAuthRetry("/api/auth/2fa/disable", { method: "POST" });
+    return !!res && res.ok;
+  } catch (error) {
+    console.error("[API] Error turning off 2FA:", error);
+    return false;
+  }
+}
+
+=== src/site/services/authService.ts ===
 /**
  * Auth service — basato sui prototipi di Ale (authFetch.js, socketAuth.js)
  * Gestisce: login, register, logout, refresh, forgot/reset password, 2FA, OAuth
  */
 
 export interface AuthResponseData {
-  requires2fa?: boolean;
-  message?: string;
-  error?: string;
-  [key: string]: any; // Permette qualsiasi altra chiave che il backend potrebbe inviare
+	requires2fa?: boolean;
+	message?: string;
+	error?: string;
+	[key: string]: any; // Permette qualsiasi altra chiave che il backend potrebbe inviare
 }
 
 export interface AuthResult {
-  ok: boolean;
-  data: AuthResponseData;
+	ok: boolean;
+	data: AuthResponseData;
 }
 
-export async function fetchWithAuthRetry(url: string, options: RequestInit = {}): Promise<Response | null> {
-  try {
-    let res = await fetch(url, { ...options, credentials: "include" });
+export async function fetchWithAuthRetry(
+	url: string,
+	options: RequestInit = {},
+): Promise<Response | null> {
+	try {
+		let res = await fetch(url, { ...options, credentials: "include" });
 
-    if (res.status === 401) {
-      const refreshed = await fetch("/api/auth/refresh", {
-        method: "POST",
-        credentials: "include",
-      });
+		if (res.status === 401) {
+			const refreshed = await fetch("/api/auth/refresh", {
+				method: "POST",
+				credentials: "include",
+			});
 
-      if (!refreshed.ok) {
-        return null; // caller should redirect to login
-      }
-      res = await fetch(url, { ...options, credentials: "include" });
-    }
+			if (!refreshed.ok) {
+				return null; // caller should redirect to login
+			}
+			res = await fetch(url, { ...options, credentials: "include" });
+		}
 
-    return res;
-  } catch (error) {
-    console.error('[Auth] Fetch error:', error);
-    return null;
-  }
-}
+		return res;
+	} catch (error) {
+		console.error("[Auth] Fetch error:", error);
+		return null;
+	}
+	}
+	
+	export async function login(
+		username: string,
+		password: string,
+		totp?: string,
+	): Promise<AuthResult> {
+		const payload: Record<string, string> = { username, password };
+		if (totp) payload.totp = totp;
+	
+		try {
+			const res = await fetch("/api/auth/login", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				credentials: "include",
+				body: JSON.stringify(payload),
+			});
+		
+			return { ok: res.ok, data: await res.json() };
+		} catch (error) {
+			console.error("[Auth] Login error:", error);
+			return { ok: false, data: { error: "Network error" } };
+		}
+	}
 
-export async function login(username: string, password: string, totp?: string): Promise<AuthResult> {
-  const payload: Record<string, string> = { username, password };
-  if (totp) payload.totp = totp;
+export async function register(
+	username: string,
+	email: string,
+	password: string,
+): Promise<AuthResult> {
+	try {
+		const res = await fetch("/api/auth/register", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			credentials: "include",
+			body: JSON.stringify({ username, email, password }),
+		});
 
-  try {
-    const res = await fetch("/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify(payload),
-    });
-
-    return { ok: res.ok, data: await res.json() };
-  } catch (error) {
-    console.error('[Auth] Login error:', error);
-    return { ok: false, data: { error: "Network error" } };
-  }
-}
-
-export async function register(username: string, email: string, password: string): Promise<AuthResult> {
-  try {
-    const res = await fetch("/api/auth/register", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({ username, email, password }),
-    });
-
-    return { ok: res.ok, data: await res.json() };
-  } catch (error) {
-    console.error('[Auth] Register error:', error);
-    return { ok: false, data: { error: "Network error" } };
-  }
+		return { ok: res.ok, data: await res.json() };
+	} catch (error) {1
+		console.error("[Auth] Register error:", error);
+		return { ok: false, data: { error: "Network error" } };
+	}
 }
 
 export async function logout(): Promise<void> {
-  try {
-    await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
-  } catch (error) {
-    console.error('[Auth] Logout error:', error);
-  }
-}
-
-export async function checkAuth(): Promise<boolean> {
-  try {
-    const res = await fetch("/api/protected", { credentials: "include" });
-    return res.ok;
-  } catch {
-    return false;
-  }
+	try {
+		await fetch("/api/auth/logout", {
+			method: "POST",
+			credentials: "include",
+		});
+	} catch (error) {
+		console.error("[Auth] Logout error:", error);
+	}
 }
 
 export async function forgotPassword(email: string): Promise<boolean> {
-  try {
-    const res = await fetch("/api/auth/forgot-password", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email }),
-    });
-    return res.ok;
-  } catch (error) {
-    console.error('[Auth] Forgot password error:', error);
-    return false;
-  }
+	try {
+		const res = await fetch("/api/auth/forgot-password", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ email }),
+		});
+		return res.ok;
+	} catch (error) {
+		console.error("[Auth] Forgot password error:", error);
+		return false;
+	}
 }
 
 export function redirectToGoogle(): void {
-  window.location.href = "/api/auth/google";
+	window.location.href = "/api/auth/google";
 }
 
 export async function refreshToken(): Promise<boolean> {
+	try {
+		const res = await fetch("/api/auth/refresh", {
+			method: "POST",
+			credentials: "include",
+		});
+		if (!res.ok) {
+			console.warn("❌ Refresh failed");
+			return false;
+		}
+		console.log("🔄 Token refreshed");
+		return true;
+	} catch (error) {
+		console.error("Refresh error:", error);
+		return false;
+	}
+}
+
+export async function verify2fa(code: string): Promise<AuthResult> {
   try {
-    const res = await fetch("/api/auth/refresh", {
+    const res = await fetch("/api/auth/2fa/verify", {
       method: "POST",
-      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include", // Vitale per farsi riconoscere dal backend!
+      body: JSON.stringify({ code }),
     });
-    if (!res.ok) {
-      console.warn("❌ Refresh failed");
-      return false;
-    }
-    console.log("🔄 Token refreshed");
-    return true;
+    return { ok: res.ok, data: await res.json().catch(() => ({})) };
   } catch (error) {
-    console.error("Refresh error:", error);
-    return false;
+    console.error('[Auth] Verify 2FA error:', error);
+    return { ok: false, data: { error: "Network error" } };
   }
 }
-===== src/site/components/Icons.tsx =====
+
+=== src/site/components/Icons.tsx ===
 import React from 'react';
 
 interface IconProps {
@@ -1737,7 +1822,7 @@ export const X = ({ size = 18 }: IconProps) => (
   </svg>
 );
 
-===== src/site/components/Dropdown.tsx =====
+=== src/site/components/Dropdown.tsx ===
 import React, { useState, useEffect, useRef } from 'react';
 import { dropdownItemBase } from '../styles/shared';
 import { theme } from '../../configs/theme';
@@ -1797,7 +1882,8 @@ export function DropdownItem({ icon: Icon, label, onClick }: {
     </button>
   );
 }
-===== src/site/components/Navbar.tsx =====
+
+=== src/site/components/Navbar.tsx ===
 import { navLinkBase } from '../styles/shared';
 import { useDropdown, DropdownPanel, DropdownItem } from './Dropdown';
 import * as Icons from './Icons';
@@ -1951,9 +2037,10 @@ export default function Navbar({ currentPage, onNavigate, onLogout, username, av
     </nav>
   );
 }
-===== src/scenes/modeSelectScene.tsx =====
+
+=== src/scenes/modeSelectScene.tsx ===
 import { useState } from 'react';
-import { MatchMode } from '../types/game.types';
+import { MatchMode } from '@transcendence/types';
 import { theme } from '../configs/theme';
 import Cerberus from '../assets/Cerberus.png';
 
@@ -2163,7 +2250,7 @@ export default function ModeSelectScene({ onModeSelect, onBack }: ModeSelectScen
   );
 }
 
-===== src/scenes/queueScene.tsx =====
+=== src/scenes/queueScene.tsx ===
 import { useEffect, useState } from 'react';
 import { matchmakingSocket } from '../services/matchmakingSocket';
 import { GameEvents } from '../game/game.events';
@@ -2352,16 +2439,17 @@ export default function QueueScene({ onMatchFound, onCancel }: QueueSceneProps) 
     </div>
   );
 }
-===== src/scenes/characterSelectScene.tsx =====
+
+=== src/scenes/characterSelectScene.tsx ===
 import { useState, useEffect, useRef } from 'react';
 import { matchmakingSocket } from '../services/matchmakingSocket';
 import { GameEvents } from '../game/game.events';
-import { MatchMode, MatchType } from '../types/game.types';
+import { CharacterName, MatchMode, MatchType } from '@transcendence/types';
 import { theme } from '../configs/theme';
-import zeusImg from '../assets/Zeus_selection.png';
-import adeImg from '../assets/Ade_selection.jpg';
+import zeusImg from '../assets/ZeusSelection.png';
+import adeImg from '../assets/AdeSelection.png'; // Cambia in .png se necessario
 
-type Character = 'zeus' | 'ade';
+type Character = typeof CharacterName[keyof typeof CharacterName];
 
 interface CharacterSelectSceneProps {
   mode: MatchMode;
@@ -2370,10 +2458,10 @@ interface CharacterSelectSceneProps {
   onBack: () => void;
 }
 
-const CHARACTERS: Character[] = ['zeus', 'ade'];
+const CHARACTERS: Character[] = [CharacterName.ZEUS, CharacterName.ADE];
 const CHARACTER_IMAGES: Record<Character, string> = {
-  zeus: zeusImg,
-  ade: adeImg,
+  [CharacterName.ZEUS]: zeusImg,
+  [CharacterName.ADE]: adeImg,
 };
 
 const P1_COLOR = theme.colors.zeus;
@@ -2401,6 +2489,10 @@ export default function CharacterSelectScene({
   
   const launchingRef = useRef(false);
   const p2Selectable = isLocal || isAI;
+
+  // Calcolo dei personaggi attualmente "attivi" (hover o selezionati) per gli sfondi
+  const activeP1 = CHARACTERS[p1Hover ?? p1Index];
+  const activeP2 = CHARACTERS[p2Hover ?? p2Index];
 
   useEffect(() => {
     if (!isSplitScreen) setP2Confirmed(true);
@@ -2464,7 +2556,6 @@ export default function CharacterSelectScene({
       const finalP1 = CHARACTERS[p1Index];
       const finalP2 = CHARACTERS[p2Index];
       
-      
     const payload = {
       characterName: isSplitScreen ? [finalP1, finalP2] : [finalP1],
       rank: (mode === MatchMode.RANKED || mode === MatchMode.UNRANKED) ? 500 : null,
@@ -2511,15 +2602,54 @@ export default function CharacterSelectScene({
       display: 'flex',
       flexDirection: isSplitScreen ? 'row' : 'column',
       alignItems: isSplitScreen ? 'stretch' : 'center',
-      backgroundColor: theme.colors.bg,
+      backgroundColor: theme.colors.bgDark, // Background di base
       overflow: 'hidden',
     }}>
+      
+      {/* ─── DYNAMIC BACKGROUNDS ─── */}
+      <div style={{ position: 'absolute', inset: 0, display: 'flex', zIndex: 0 }}>
+        {isSplitScreen ? (
+          <>
+            {/* Sfondo Metà Sinistra (P1) */}
+            <div style={{
+              flex: 1,
+              backgroundImage: `url(${CHARACTER_IMAGES[activeP1]})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              transition: 'background-image 0.4s ease-in-out',
+              borderRight: `2px solid ${theme.colors.borderHover}`
+            }} />
+            {/* Sfondo Metà Destra (P2) */}
+            <div style={{
+              flex: 1,
+              backgroundImage: `url(${CHARACTER_IMAGES[activeP2]})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              transition: 'background-image 0.4s ease-in-out',
+            }} />
+          </>
+        ) : (
+          /* Sfondo Intero (Single Player) */
+          <div style={{
+            flex: 1,
+            backgroundImage: `url(${CHARACTER_IMAGES[activeP1]})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center top',
+            transition: 'background-image 0.4s ease-in-out',
+          }} />
+        )}
+      </div>
+
+      {/* Dark Overlay per garantire la leggibilità della UI */}
       <div style={{
         position: 'absolute',
         inset: 0,
-        background: `radial-gradient(ellipse at 50% 40%, rgba(80, 40, 0, 0.1) 0%, transparent 60%)`,
-        pointerEvents: 'none',
+        backgroundColor: 'rgba(5, 10, 20, 0.75)', // Modifica l'opacità per vedere più o meno lo sfondo
+        zIndex: 1,
+        pointerEvents: 'none'
       }} />
+      {/* ─────────────────────────── */}
+
 
       <button
         onClick={onBack}
@@ -2562,6 +2692,7 @@ export default function CharacterSelectScene({
             justifyContent: 'center',
             position: 'relative',
             padding: '40px 20px',
+            zIndex: 2,
           }}>
             <h2 style={{
               fontFamily: theme.fonts.heading,
@@ -2617,7 +2748,7 @@ export default function CharacterSelectScene({
                   letterSpacing: '6px',
                   transition: 'all 0.3s ease',
                 }}>
-                  {CHARACTERS[p1Hover ?? p1Index]}
+                  {activeP1}
                 </span>
                 <div style={{
                   marginTop: '20px',
@@ -2628,9 +2759,11 @@ export default function CharacterSelectScene({
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  color: theme.colors.textMuted,
+                  color: theme.colors.textPrimary,
                   fontFamily: theme.fonts.mono,
                   fontSize: '10px',
+                  backgroundColor: 'rgba(0,0,0,0.4)', // Sfondo semi-scuro per il box modello
+                  backdropFilter: 'blur(2px)'
                 }}>
                   3D MODEL
                 </div>
@@ -2680,11 +2813,12 @@ export default function CharacterSelectScene({
                     style={{
                       width: '120px',
                       height: '59px',
-                      objectFit: 'contain',
+                      objectFit: 'cover',
+                      borderRadius: '4px',
                       transition: 'all 0.3s ease',
                       opacity: (p1On || p2On) ? 1 : 0.4,
-                      filter: (p1On || p2On) ? 'none' : 'grayscale(0.6)',
-                      border: `0.5px solid ${theme.colors.goldSubtle}`,
+                      filter: (p1On || p2On) ? 'none' : 'grayscale(0.8)',
+                      border: `1px solid ${(p1On || p2On) ? theme.colors.gold : theme.colors.goldSubtle}`,
                       boxShadow: getSharedButtonGlow(index),
                     }}
                   />
@@ -2700,6 +2834,9 @@ export default function CharacterSelectScene({
               textAlign: 'center',
               lineHeight: 1.6,
               marginTop: '8px',
+              backgroundColor: 'rgba(0,0,0,0.5)',
+              padding: '6px 12px',
+              borderRadius: '4px'
             }}>
               <span style={{ color: P1_COLOR }}>P1</span> W/S + SPACE
               <br />
@@ -2717,6 +2854,7 @@ export default function CharacterSelectScene({
             position: 'relative',
             padding: '40px 20px',
             opacity: !p2Selectable ? 0.5 : 1,
+            zIndex: 2,
           }}>
             <h2 style={{
               fontFamily: theme.fonts.heading,
@@ -2772,7 +2910,7 @@ export default function CharacterSelectScene({
                   letterSpacing: '6px',
                   transition: 'all 0.3s ease',
                 }}>
-                  {CHARACTERS[p2Hover ?? p2Index]}
+                  {activeP2}
                 </span>
                 <div style={{
                   marginTop: '20px',
@@ -2783,9 +2921,11 @@ export default function CharacterSelectScene({
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  color: theme.colors.textMuted,
+                  color: theme.colors.textPrimary,
                   fontFamily: theme.fonts.mono,
                   fontSize: '10px',
+                  backgroundColor: 'rgba(0,0,0,0.4)',
+                  backdropFilter: 'blur(2px)'
                 }}>
                   3D MODEL
                 </div>
@@ -2814,17 +2954,19 @@ export default function CharacterSelectScene({
           alignItems: 'center',
           justifyContent: 'center',
           padding: '40px',
+          zIndex: 2,
         }}>
           <span style={{
             fontFamily: theme.fonts.heading,
-            fontSize: '13px',
-            fontWeight: 400,
-            color: theme.colors.goldDim,
+            fontSize: '16px', // Leggermente più grande per visibilità
+            fontWeight: 700,
+            color: theme.colors.goldBright,
             textTransform: 'uppercase',
-            letterSpacing: '6px',
+            letterSpacing: '8px',
             transition: 'all 0.3s ease',
+            textShadow: `0 0 20px ${theme.colors.goldGlow}`
           }}>
-            {CHARACTERS[p1Hover ?? p1Index]}
+            {activeP1}
           </span>
 
           <div style={{
@@ -2835,10 +2977,13 @@ export default function CharacterSelectScene({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            color: theme.colors.textMuted,
+            color: theme.colors.textPrimary,
             fontFamily: theme.fonts.mono,
             fontSize: '10px',
             position: 'relative',
+            backgroundColor: 'rgba(0,0,0,0.4)',
+            backdropFilter: 'blur(4px)',
+            borderRadius: '8px',
           }}>
             3D MODEL
             <div style={{
@@ -2867,7 +3012,7 @@ export default function CharacterSelectScene({
           <div style={{
             display: 'flex',
             gap: '24px',
-            marginTop: '24px',
+            marginTop: '32px',
           }}>
             {CHARACTERS.map((char, index) => {
               const isSelected = p1Index === index;
@@ -2891,14 +3036,16 @@ export default function CharacterSelectScene({
                     src={CHARACTER_IMAGES[char]}
                     alt={char}
                     style={{
-                      width: '120px',
-                      height: '59px',
-                      objectFit: 'contain',
+                      width: '140px', // Leggermente più larghi in single player
+                      height: '69px',
+                      objectFit: 'cover',
+                      borderRadius: '4px',
                       transition: 'all 0.3s ease',
-                      opacity: active ? 1 : 0.4,
-                      filter: active ? 'none' : 'grayscale(0.6)',
-                      border: `0.5px solid ${theme.colors.goldSubtle}`,
-                      boxShadow: active ? `0 0 16px ${theme.colors.goldGlow}` : 'none',
+                      opacity: active ? 1 : 0.5,
+                      filter: active ? 'none' : 'grayscale(0.8)',
+                      border: `1px solid ${active ? theme.colors.gold : theme.colors.goldSubtle}`,
+                      boxShadow: active ? `0 0 20px ${theme.colors.goldGlow}` : 'none',
+                      transform: active ? 'scale(1.05)' : 'scale(1)'
                     }}
                   />
                 </div>
@@ -2907,11 +3054,14 @@ export default function CharacterSelectScene({
           </div>
 
           <p style={{
-            marginTop: '16px',
+            marginTop: '24px',
             fontFamily: theme.fonts.mono,
-            fontSize: '10px',
-            color: theme.colors.textMuted,
+            fontSize: '11px',
+            color: theme.colors.textPrimary,
             letterSpacing: '2px',
+            backgroundColor: 'rgba(0,0,0,0.6)',
+            padding: '8px 16px',
+            borderRadius: '4px'
           }}>
             A / D or ← / → — SPACE or ENTER
           </p>
@@ -2925,7 +3075,7 @@ export default function CharacterSelectScene({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          backgroundColor: 'rgba(0, 0, 0, 0.85)', // Più scuro al caricamento
           zIndex: 100,
           animation: 'fadeIn 0.4s ease-out',
         }}>
@@ -2950,7 +3100,8 @@ export default function CharacterSelectScene({
     </div>
   );
 }
-===== src/scenes/welcomeScene.tsx =====
+
+=== src/scenes/welcomeScene.tsx ===
 import { useState } from 'react';
 import { theme } from '../configs/theme';
 import welcomeScene from '../assets/welcomeScene.png';
@@ -3086,9 +3237,12 @@ export default function WelcomeScene({ onStart }: WelcomeSceneProps) {
   );
 }
 
-===== src/types/game.types.ts =====
+=== src/types/game.types.ts ===
 // types/game.types.ts
 // Mirrors backend interfaces — keep in sync manually.
+
+import { CharacterName, EndReason, MatchMode, MatchType } from '@transcendence/types';
+export { CharacterName, EndReason, MatchMode, MatchType };
 
 export interface Vector {
   x: number;
@@ -3109,36 +3263,12 @@ export enum BulletHit {
   NONE       = 'none',
 }
 
-export enum CharacterName {
-  ADE     = 'ade',
-  ZEUS    = 'zeus',
-  DEFAULT = 'default',
-}
-
-export enum EndReason {
-  TIMEOUT     = 'timeout',
-  RESIGNATION = 'resignation',
-  KILLOUT     = 'killout',
-}
-
-export enum MatchMode {
-  RANKED   = 'ranked',
-  UNRANKED = 'unranked',
-  LOCAL    = 'local',
-  AI       = 'ai',
-}
-
-export enum MatchType {
-  TEAM = 'team',
-  FFA  = 'ffa',
-}
-
 // --- Snapshot: what the server sends every tick ---
 
 export interface PlayerSnapshot {
   id: string;
   type: string;
-  characterName: string;
+  characterName: CharacterName;
   teamId: number;
   position: Vector;
   rotation: number;
@@ -3156,7 +3286,7 @@ export interface PlayerSnapshot {
 export interface BulletSnapshot {
   type: string;
   id: string;
-  characterName: string;
+  characterName: CharacterName;
   position: Vector;
   hit: BulletHit;
 }
@@ -3236,17 +3366,20 @@ export interface MatchMakingData {
   isAiPlayer: boolean;
   playerIndex: number | undefined;
 }
-===== src/types/interfaces-enums/index.ts =====
+
+=== src/types/interfaces-enums/index.ts ===
 export * from './game.enums';
 export * from './dynamic-entitys.interfaces';
 export * from './map.interfaces';
 export * from './game-states.interfaces';
 export * from './db-data.interfaces';
 export * from './matchmaking.interfaces';
-===== src/types/interfaces-enums/dynamic-entitys.interfaces.ts =====
+
+=== src/types/interfaces-enums/dynamic-entitys.interfaces.ts ===
 import { IPlayerState } from "./player.states.interfaces";
 import { Vector } from "../game.types";
-import { BulletHit, AttackType, CharacterName } from "./game.enums";
+import { BulletHit, AttackType } from "./game.enums";
+import { CharacterName } from '@transcendence/types';
 
 export interface	DynamicEntity{
 	entityId: string; // Unique identifier (Socket ID for players, UUID for projectiles)
@@ -3326,7 +3459,8 @@ export interface CharacherStats{
 	COOLDOWN_SPELL_ATTACK: number,
 	COOLDOWN_DEFENCE_ATTACK: number
 }
-===== src/types/interfaces-enums/game.enums.ts =====
+
+=== src/types/interfaces-enums/game.enums.ts ===
 export enum AttackType{
 	MELEE_ATTACK = 'melee-attack',
 	SPELL_ATTACK = 'spell-attack',
@@ -3339,30 +3473,7 @@ export enum BulletHit{
 	NONE = 'none',
 }
 
-export enum CharacterName{
-	ADE = 'ade',
-	ZEUS = 'zeus',
-	DEFAULT = 'default'
-}
-
-export enum EndReason{
-	TIMEOUT = 'timeout',
-	RESIGNATION = 'resignation',
-	KILLOUT = 'killout',
-}
-
-export enum MatchMode{
-	RANKED = 'ranked',
-	UNRANKED = 'unranked',
-	LOCAL = 'local',
-	AI = 'ai',
-}
-
-export enum MatchType{
-	TEAM = 'team',
-	FFA = 'ffa'
-}
-===== src/types/interfaces-enums/map.interfaces.ts =====
+=== src/types/interfaces-enums/map.interfaces.ts ===
 import { Vector } from "../game.types";
 
 export interface	StaticEntity{
@@ -3413,14 +3524,12 @@ export interface MapData{
 	pillars: MapPillarsData[];
 	spawn_points: {x: number, z: number}[];
 }
-===== src/types/interfaces-enums/game.state.interface.ts =====
-import { Logger } from "@nestjs/common";
+
+=== src/types/interfaces-enums/game.state.interface.ts ===
 import { Vector } from "../game.types";
 import { AttackType } from ".";
 
 export interface IGameState{
-
-	logger: Logger;
 
 	name: string;
 
@@ -3432,8 +3541,9 @@ export interface IGameState{
 
 	onExit(): void;
 }
-===== src/types/interfaces-enums/db-data.interfaces.ts =====
-import { EndReason, MatchType, MatchMode, CharacterName } from "./game.enums";
+
+=== src/types/interfaces-enums/db-data.interfaces.ts ===
+import { EndReason, MatchType, MatchMode, CharacterName } from "@transcendence/types";
 
 export interface MatchResult {
 	mode: MatchMode; // RANKED, LOCAL, AI
@@ -3456,8 +3566,9 @@ export interface PlayerResult {
 
 	//finalHpPercent: number;
 }
-===== src/types/interfaces-enums/matchmaking.interfaces.ts =====
-import { CharacterName, MatchMode, MatchType } from "./game.enums";
+
+=== src/types/interfaces-enums/matchmaking.interfaces.ts ===
+import { CharacterName, MatchMode, MatchType } from "@transcendence/types";
 
 export interface MatchMakingData{
 	socketId: string | undefined;
@@ -3466,15 +3577,17 @@ export interface MatchMakingData{
 	isAiPlayer: boolean;
 	playerIndex: number | undefined;
 };
-===== src/types/interfaces-enums/game-states.interfaces.ts =====
+
+=== src/types/interfaces-enums/game-states.interfaces.ts ===
 import { Vector } from "../game.types";
 import { AttackType, BulletHit } from "./game.enums";
 import { Player } from "./dynamic-entitys.interfaces";
+import { CharacterName } from '@transcendence/types';
 
 export interface PlayerSnapshot {
 	id: string;
 	type: string;
-	characterName: string;
+	characterName: CharacterName;
 	teamId: number;
 	position: Vector;
 	rotation: number;
@@ -3492,7 +3605,7 @@ export interface PlayerSnapshot {
 export interface BulletSnapshot{
 	type: string;
 	id: string;
-	characterName: string;
+	characterName: CharacterName;
 	position: Vector;
 	entityHit: Player | undefined;
 	hit: BulletHit;
@@ -3517,7 +3630,8 @@ export interface GameEndEvents{
 	winnerData: WinnerData | undefined;
 	time: number;
 }
-===== src/types/interfaces-enums/player.states.interfaces.ts =====
+
+=== src/types/interfaces-enums/player.states.interfaces.ts ===
 import { Player } from ".";
 
 export interface IPlayerState{
@@ -3526,11 +3640,13 @@ export interface IPlayerState{
 
 	update(player: Player, dt: number): void;
 }
-===== src/types/socket.types.ts =====
+
+=== src/types/socket.types.ts ===
 import { PlayerSnapshot, BulletSnapshot, WinnerData } from './game.types';
+import { CharacterName } from '@transcendence/types';
 
 export interface JoinLobbyPayload {
-  characterName: 'Zeus' | 'Ade';
+  characterName: CharacterName;
 }
 
 export interface GameInputPayload {
@@ -3551,49 +3667,15 @@ export interface GameOverPayload {
   winnerData: WinnerData;
   time: number;
 }
-===== src/index.css =====
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
 
-html, body, #root {
-  width: 100%;
-  min-height: 100%;
-  margin: 0;
-  padding: 0;
-  font-family: system-ui, -apple-system, sans-serif;
-}
-
-body {
-  background: #0f0f0f;
-  color: #fff;
-  overflow-x: hidden;
-}
-
-canvas {
-  display: block;
-}
-
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-body {
-  font-family: 'Inter', 'Segoe UI', sans-serif;
-  background: #0a0a14;
-  color: #ffffff;
-  overflow-x: hidden;
-}
-===== src/game/Game.tsx =====
+=== src/game/Game.tsx ===
 import { Canvas } from '@react-three/fiber';
 import { useLoader } from '@react-three/fiber';
 import { useGameSocket } from '../hooks/useGameSocket';
 import { InputManager } from './input/inputManager';
 import { useEffect, useRef } from 'react';
 import { GameConfig } from '../configs/config';
-import { MatchMode } from '../types/game.types';
+import { CharacterName, MatchMode } from '@transcendence/types';
 import GameUI from './UI/gameUI';
 import { PlayerEntity } from './entities/PlayerEntity';
 import { BulletEntity } from './entities/BulletEntity';
@@ -3602,12 +3684,13 @@ import GameChat  from './UI/components/GameChat';
 import { EffectComposer, Bloom } from '@react-three/postprocessing';
 import * as THREE from 'three';
 import mapTexture from '../assets/mapTexture.png';
+import { useGameStore } from '../storage/gameStore';
 
 interface GameProps {
-  selectedCharacter: 'zeus' | 'ade';
+  selectedCharacter: CharacterName;
   selectedMode: MatchMode;
-  p1Character: 'zeus' | 'ade';
-  p2Character: 'zeus' | 'ade';
+  p1Character: CharacterName;
+  p2Character: CharacterName;
   onPlayAgain: () => void;
   onQuit: () => void;
   myUserId: string,
@@ -3615,7 +3698,12 @@ interface GameProps {
 
 export default function Game({ selectedCharacter, selectedMode, onPlayAgain, onQuit, myUserId }: GameProps) {
   const inputManagerRef = useRef<InputManager | null>(null);
-  const { isConnected, world, gameState, gameOver } = useGameSocket();
+  
+  const { isConnected, world, gameOver } = useGameSocket();
+
+  const playerIds = useGameStore((state) => state.gameState?.players.map(p => p.id) || []);
+  const bulletIds = useGameStore((state) => state.gameState?.bullets.map(b => b.id) || []);
+  const fullGameState = useGameStore((state) => state.gameState);
 
   useEffect(() => {
     const isLocal = selectedMode === MatchMode.LOCAL;
@@ -3674,12 +3762,12 @@ export default function Game({ selectedCharacter, selectedMode, onPlayAgain, onQ
           position={[centerX, 0, centerZ]}
         />
 
-        {gameState?.players.map((player) => (
-          <PlayerEntity key={player.id} snapshot={player} />
+        {playerIds.map((id) => (
+          <PlayerEntity key={id} playerId={id} />
         ))}
 
-        {gameState?.bullets.map((bullet) => (
-          <BulletEntity key={bullet.id} snapshot={bullet} />
+        {bulletIds.map((id) => (
+          <BulletEntity key={id} bulletId={id} />
         ))}
 
         <EffectComposer>
@@ -3697,10 +3785,10 @@ export default function Game({ selectedCharacter, selectedMode, onPlayAgain, onQ
           character={selectedCharacter}
           isConnected={isConnected}
           mapData={world}
-          playersCount={gameState?.players.length || 0}
+          playersCount={playerIds.length}
           maxPlayers={world?.map?.maxPlayers || 2}
           gameOver={gameOver}
-          gameState={gameState}
+          gameState={fullGameState}
         />
       )}
 
@@ -3711,10 +3799,10 @@ export default function Game({ selectedCharacter, selectedMode, onPlayAgain, onQ
         />
       )}
 
-      {gameOver && gameState && (
+      {gameOver && fullGameState && (
         <GameOverOverlay
           gameOver={gameOver}
-          players={gameState.players}
+          players={fullGameState.players}
           onPlayAgain={onPlayAgain}
           onQuit={onQuit}
         />
@@ -3722,10 +3810,12 @@ export default function Game({ selectedCharacter, selectedMode, onPlayAgain, onQ
     </div>
   );
 }
-===== src/game/UI/gameUI.tsx =====
+
+=== src/game/UI/gameUI.tsx ===
 import { GameStatePayload, MapEmitPayload } from '../../types/game.types';
 import { theme } from '../../configs/theme';
 import HPBar from './components/HPBar';
+import {CharacterName} from '@transcendence/types';
 
 interface GameUIProps {
   character: string;
@@ -3768,8 +3858,8 @@ export default function GameUI({
             key={`death-${player.id}`}
             style={{
               position: 'absolute',
-              top: player.characterName === 'zeus' ? '60px' : 'auto',
-              bottom: player.characterName === 'ade' ? '60px' : 'auto',
+              top: player.characterName === CharacterName.ZEUS ? '60px' : 'auto',
+              bottom: player.characterName === CharacterName.ADE ? '60px' : 'auto',
               left: '20px',
               pointerEvents: 'none',
               zIndex: 1001,
@@ -3848,9 +3938,11 @@ export default function GameUI({
     </>
   );
 }
-===== src/game/UI/components/GameOverOverlay.tsx =====
+
+=== src/game/UI/components/GameOverOverlay.tsx ===
 import { GameOverPayload, PlayerSnapshot } from '../../../types/game.types';
 import { theme } from '../../../configs/theme';
+import {CharacterName} from '@transcendence/types';
 
 interface GameOverOverlayProps {
   gameOver: GameOverPayload;
@@ -3869,8 +3961,8 @@ export function GameOverOverlay({ gameOver, players, onPlayAgain, onQuit }: Game
   const displayName = winnerName.charAt(0).toUpperCase() + winnerName.slice(1);
   const isDraw = winners.length === 0;
 
-  const color = winnerName === 'zeus' ? theme.colors.zeus : theme.colors.ade;
-  const glow = winnerName === 'zeus' ? theme.colors.zeusGlow : theme.colors.adeGlow;
+  const color = winnerName === CharacterName.ZEUS ? theme.colors.zeus : theme.colors.ade;
+  const glow = winnerName === CharacterName.ZEUS ? theme.colors.zeusGlow : theme.colors.adeGlow;
 
   return (
     <div style={{
@@ -4033,7 +4125,7 @@ function HeaderCell({ children, center }: { children: string; center?: boolean }
 }
 
 function PlayerRow({ player, isWinner }: { player: PlayerSnapshot; isWinner: boolean }) {
-  const playerColor = player.characterName === 'zeus' ? theme.colors.zeus : theme.colors.ade;
+  const playerColor = player.characterName === CharacterName.ZEUS ? theme.colors.zeus : theme.colors.ade;
   const displayName = player.characterName.charAt(0).toUpperCase() + player.characterName.slice(1);
 
   return (
@@ -4081,9 +4173,11 @@ function StatCell({ children }: { children: string }) {
     </span>
   );
 }
-===== src/game/UI/components/HPBar.tsx =====
+
+=== src/game/UI/components/HPBar.tsx ===
 import { Vector } from '../../../types/game.types';
 import { theme } from '../../../configs/theme';
+import {CharacterName} from '@transcendence/types';
 
 interface HPBarProps {
   characterName: string;
@@ -4113,8 +4207,8 @@ export default function HPBar({
   return (
     <div style={{
       position: 'absolute',
-      top: characterName === 'zeus' ? '20px' : 'auto',
-      bottom: characterName === 'ade' ? '20px' : 'auto',
+      top: characterName === CharacterName.ZEUS ? '20px' : 'auto',
+      bottom: characterName === CharacterName.ADE ? '20px' : 'auto',
       left: '20px',
       width: '120px',
       fontFamily: theme.fonts.mono,
@@ -4184,7 +4278,8 @@ export default function HPBar({
     </div>
   );
 }
-===== src/game/UI/components/GameChat.tsx =====
+
+=== src/game/UI/components/GameChat.tsx ===
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { socketService } from '../../../services/socketServices';
 import { GameEvents } from '../../game.events';
@@ -4438,7 +4533,7 @@ export default function GameChat({ myUserId, isVisible }: GameChatProps) {
   );
 }
 
-===== src/game/game.events.ts =====
+=== src/game/game.events.ts ===
 export enum GameEvents {
   // Matchmaking — verso Leonardo (socket logic-service)
   JOIN_LOCAL = 'join_local',
@@ -4454,7 +4549,8 @@ export enum GameEvents {
   INPUT = 'game-input',
   GAME_MESSAGE = 'game-message',
 }
-===== src/game/input/inputManager.ts =====
+
+=== src/game/input/inputManager.ts ===
 import { socketService } from '../../services/socketServices';
 import { GameEvents } from '../game.events';
 import { AttackType } from '../../types/game.types';
@@ -4604,15 +4700,18 @@ export class InputManager {
     }
   }
 }
-===== src/game/entities/BulletEntity.tsx =====
+
+=== src/game/entities/BulletEntity.tsx ===
 import { useRef, useMemo, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { BulletSnapshot, BulletHit } from '../../types/game.types';
 import { ImpactEffect } from './ImpactEffect';
+import { CharacterName } from '@transcendence/types';
+import { useGameStore } from '../../storage/gameStore';
 
 interface BulletEntityProps {
-  snapshot: BulletSnapshot;
+  bulletId: string;
 }
 
 // Scaled 2x (was 0.5)
@@ -4728,26 +4827,30 @@ function createLinePrimitive(geo: THREE.BufferGeometry, color: THREE.Color, opac
 
 // --- Entry ---
 
-export function BulletEntity({ snapshot }: BulletEntityProps) {
+export function BulletEntity({ bulletId }: BulletEntityProps) {
+  const snapshot = useGameStore((state) => state.gameState?.bullets.find(b => b.id === bulletId));
+
+  if (!snapshot) return null;
+
   const hasHit = snapshot.hit !== undefined && snapshot.hit !== BulletHit.NONE;
 
   if (hasHit) {
     return <ImpactEffect snapshot={snapshot} />;
   }
 
-  return snapshot.characterName === 'zeus'
-    ? <ZeusBullet snapshot={snapshot} />
-    : <AdeBullet snapshot={snapshot} />;
+  return snapshot.characterName === CharacterName.ZEUS
+    ? <ZeusBullet bulletId={bulletId} initialSnapshot={snapshot} />
+    : <AdeBullet bulletId={bulletId} initialSnapshot={snapshot} />;
 }
 
 // ============================================
 // ZEUS BULLET
 // ============================================
 
-function ZeusBullet({ snapshot }: { snapshot: BulletSnapshot }) {
+function ZeusBullet({ bulletId, initialSnapshot }: { bulletId: string, initialSnapshot: BulletSnapshot }) {
   const groupRef = useRef<THREE.Group>(null);
   const timeAccum = useRef(0);
-  const prevPos = useRef(new THREE.Vector3(snapshot.position.x, 1, snapshot.position.z));
+  const prevPos = useRef(new THREE.Vector3(initialSnapshot.position.x, 1, initialSnapshot.position.z));
 
   const boltCount = 6;
   const boltSegments = 6;
@@ -4780,9 +4883,14 @@ function ZeusBullet({ snapshot }: { snapshot: BulletSnapshot }) {
 
   useFrame((_, delta) => {
     if (!groupRef.current) return;
+    
+    const currentGameState = useGameStore.getState().gameState;
+    const currentBullet = currentGameState?.bullets.find(b => b.id === bulletId);
+    if (!currentBullet) return;
+
     const dt = Math.min(delta, 0.05);
 
-    const target = new THREE.Vector3(snapshot.position.x, 1, snapshot.position.z);
+    const target = new THREE.Vector3(currentBullet.position.x, 1, currentBullet.position.z);
     groupRef.current.position.lerp(target, 1 - Math.pow(0.001, dt));
 
     const currentPos = groupRef.current.position;
@@ -4832,7 +4940,7 @@ function ZeusBullet({ snapshot }: { snapshot: BulletSnapshot }) {
   });
 
   return (
-    <group ref={groupRef} position={[snapshot.position.x, 1, snapshot.position.z]}>
+    <group ref={groupRef} position={[initialSnapshot.position.x, 1, initialSnapshot.position.z]}>
       {/* Core */}
       <mesh>
         <sphereGeometry args={[BULLET_RADIUS * 0.35, 16, 16]} />
@@ -4872,7 +4980,7 @@ function ZeusBullet({ snapshot }: { snapshot: BulletSnapshot }) {
 
 const TRAIL_COUNT = 50;
 
-function AdeBullet({ snapshot }: { snapshot: BulletSnapshot }) {
+function AdeBullet({ bulletId, initialSnapshot }: { bulletId: string, initialSnapshot: BulletSnapshot }) {
   const groupRef = useRef<THREE.Group>(null);
   const fireMatRef = useRef<THREE.ShaderMaterial>(null);
   const time = useRef(0);
@@ -4931,10 +5039,15 @@ function AdeBullet({ snapshot }: { snapshot: BulletSnapshot }) {
 
   useFrame((_, delta) => {
     if (!groupRef.current) return;
+
+    const currentGameState = useGameStore.getState().gameState;
+    const currentBullet = currentGameState?.bullets.find(b => b.id === bulletId);
+    if (!currentBullet) return;
+
     const dt = Math.min(delta, 0.05);
     time.current += dt;
 
-    const target = new THREE.Vector3(snapshot.position.x, 1, snapshot.position.z);
+    const target = new THREE.Vector3(currentBullet.position.x, 1, currentBullet.position.z);
     groupRef.current.position.lerp(target, 1 - Math.pow(0.001, dt));
 
     if (fireMatRef.current) {
@@ -5005,7 +5118,7 @@ function AdeBullet({ snapshot }: { snapshot: BulletSnapshot }) {
   });
 
   return (
-    <group ref={groupRef} position={[snapshot.position.x, 1, snapshot.position.z]}>
+    <group ref={groupRef} position={[initialSnapshot.position.x, 1, initialSnapshot.position.z]}>
       {/* Core */}
       <mesh>
         <sphereGeometry args={[BULLET_RADIUS * 0.25, 10, 10]} />
@@ -5049,7 +5162,7 @@ function AdeBullet({ snapshot }: { snapshot: BulletSnapshot }) {
   );
 }
 
-===== src/game/entities/ZeusAura.tsx =====
+=== src/game/entities/ZeusAura.tsx ===
 import { useRef, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
@@ -5282,70 +5395,88 @@ function regenerateBolts(
   }
 }
 
-===== src/game/entities/PlayerEntity.tsx =====
-
+=== src/game/entities/PlayerEntity.tsx ===
 import { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
-import { PlayerSnapshot, AttackType } from '../../types/game.types';
+import { PlayerSnapshot } from '../../types/game.types';
+import {CharacterName} from '@transcendence/types';
 import { ZeusAura } from './ZeusAura';
 import { AdeAura } from './AdeAura';
+import { useGameStore } from '../../storage/gameStore'; // NUOVO IMPORT
+
+// VECCHIO MODO:
+// interface PlayerEntityProps {
+//   snapshot: PlayerSnapshot;
+// }
 
 interface PlayerEntityProps {
-  snapshot: PlayerSnapshot;
+  playerId: string;
 }
 
-export function PlayerEntity({ snapshot }: PlayerEntityProps) {
+export function PlayerEntity({ playerId }: PlayerEntityProps) {
   const groupRef = useRef<THREE.Group>(null);
-
-  const bodyColor = snapshot.teamId === 0 ? 0x00008b : 0x8b0000;
+  const initialPlayer = useGameStore((state) => state.gameState?.players.find(p => p.id === playerId));
+  const bodyColor = initialPlayer?.characterName === CharacterName.ZEUS ? 0x00008b : 0x8b0000;
 
   useFrame((_, delta) => {
     if (!groupRef.current) return;
 
-    const target = new THREE.Vector3(snapshot.position.x, 0, snapshot.position.z);
+    // NUOVO MODO (TRANSIENT UPDATE): Peschiamo i dati freschi dalla RAM a 144 FPS
+    // .getState() bypassa le regole di React, leggendo direttamente lo stato attuale di Zustand
+    const currentGameState = useGameStore.getState().gameState;
+    const currentPlayer = currentGameState?.players.find(p => p.id === playerId);
+    
+    if (!currentPlayer) return;
+    // NUOVO MODO:
+    const target = new THREE.Vector3(currentPlayer.position.x, 0, currentPlayer.position.z);
     groupRef.current.position.lerp(target, 1 - Math.pow(0.001, delta));
+    
+    // Siccome snapshot non c'è più nel render, applichiamo la rotazione direttamente qui
+    groupRef.current.rotation.y = currentPlayer.rotation;
   });
 
-  const opacity = snapshot.isDead ? 0.2 : 1.0;
+  const opacity = initialPlayer?.isDead ? 0.2 : 1.0;
+
+  // Se per qualche motivo il server non ha ancora mandato i dati di questo giocatore, non renderizziamo nulla
+  if (!initialPlayer) return null;
 
   return (
     <group ref={groupRef}>
-      {/* Body — raggio 2.4 (backend radius 1.6 × 1.5 visual) */}
-      <mesh position={[0, 2.4, 0]} rotation={[0, snapshot.rotation, 0]}>
+      <mesh position={[0, 2.4, 0]}>
         <sphereGeometry args={[2.4, 32, 32]} />
         <meshStandardMaterial
           color={bodyColor}
-          transparent={snapshot.isDead}
+          transparent={initialPlayer.isDead}
           opacity={opacity}
         />
       </mesh>
 
-      {/* Aura specifica per personaggio */}
-      {snapshot.characterName === 'zeus' ? (
+      {initialPlayer.characterName === CharacterName.ZEUS ? (
         <ZeusAura
-          isAttacking={snapshot.isAttacking}
-          attackType={snapshot.attackType}
-          isDefending={snapshot.isDefending}
-          isDead={snapshot.isDead}
+          isAttacking={initialPlayer.isAttacking}
+          attackType={initialPlayer.attackType}
+          isDefending={initialPlayer.isDefending}
+          isDead={initialPlayer.isDead}
         />
       ) : (
         <AdeAura
-          isAttacking={snapshot.isAttacking}
-          attackType={snapshot.attackType}
-          isDefending={snapshot.isDefending}
-          isDead={snapshot.isDead}
+          isAttacking={initialPlayer.isAttacking}
+          attackType={initialPlayer.attackType}
+          isDefending={initialPlayer.isDefending}
+          isDead={initialPlayer.isDead}
         />
       )}
     </group>
   );
 }
 
-===== src/game/entities/ImpactEffect.tsx =====
+=== src/game/entities/ImpactEffect.tsx ===
 import { useRef, useMemo, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { BulletSnapshot } from '../../types/game.types';
+import {CharacterName} from '@transcendence/types';
 
 interface ImpactEffectProps {
   snapshot: BulletSnapshot;
@@ -5378,7 +5509,7 @@ export function ImpactEffect({ snapshot }: ImpactEffectProps) {
   const [expired, setExpired] = useState(false);
   const age = useRef(0);
 
-  const isZeus = snapshot.characterName === 'zeus';
+  const isZeus = snapshot.characterName === CharacterName.ZEUS;
 
   const particleColor = isZeus
     ? new THREE.Color(0, 4, 10)
@@ -5524,7 +5655,7 @@ export function ImpactEffect({ snapshot }: ImpactEffectProps) {
   );
 }
 
-===== src/game/entities/AdeAura.tsx =====
+=== src/game/entities/AdeAura.tsx ===
 import { useRef, useMemo, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
@@ -5923,7 +6054,7 @@ function respawnEmber(
   maxLife[i] = l;
 }
 
-===== src/game/entities/GameArena.tsx =====
+=== src/game/entities/GameArena.tsx ===
 import { Vector } from '../../types/game.types';
 
 interface WallData {
@@ -5965,7 +6096,8 @@ export function GameArena({ mapData }: GameArenaProps) {
     </group>
   );
 }
-===== src/game/core/gameCamera.ts =====
+
+=== src/game/core/gameCamera.ts ===
 import * as THREE from 'three';
 import { GameConfig } from '../../configs/config';
 
@@ -6006,7 +6138,8 @@ export class GameCamera {
     this.camera.updateProjectionMatrix();
   }
 }
-===== src/game/core/gameScene.ts =====
+
+=== src/game/core/gameScene.ts ===
 /**
  * GameScene: Setup e gestione della scena Three.js.
  * 
@@ -6109,189 +6242,266 @@ export class GameScene {
     this.renderer.dispose();
   }
 }
-===== src/services/socketServices.ts =====
-// frontend/src/services/socketServices.ts
-import { io, Socket } from 'socket.io-client';
-import { GameEvents } from '../game/game.events';
-import { refreshToken } from '../site/services/authService';
+
+=== src/services/socketServices.ts ===
+import { io, Socket } from "socket.io-client";
+import * as msgpackParser from "socket.io-msgpack-parser";
+import { GameEvents } from "../game/game.events";
+import { refreshToken } from "../site/services/authService";
 
 export class SocketService {
-    private socket: Socket | null = null;
+	private socket: Socket | null = null;
 
-    public getSocket(): Socket | null {
-        return this.socket;
-    }
+	public getSocket(): Socket | null {
+		return this.socket;
+	}
 
-    connect(url: string, userDbId?: string): Socket {
-        if (this.socket?.connected) {
-            console.log('Already connected.');
-            return this.socket;
-        }
+	connect(url: string, userDbId?: string): Socket {
+		if (this.socket?.connected) {
+			console.log("🔵 [GameSocket] Already connected.");
+			return this.socket;
+		}
 
-        this.socket = io(url, {
-            path: "/game_api/socket.io",
-            transports: ['websocket', 'polling'], // Come da codice di Ale
-            withCredentials: true,                // FONDAMENTALE PER IL JWT
-            reconnection: true,
-            reconnectionAttempts: 5,
-            reconnectionDelay: 1000,
-            query: userDbId ? { userDbId } : {},
-        });
+		console.log(
+			`🟡 [GameSocket] Initiating connection for UserDB ID: ${userDbId || "None"}...`,
+		);
+		this.socket = io(url, {
+			path: "/ws/game/socket.io",
+			transports: ["websocket", "polling"],
+			parser: msgpackParser,
+			withCredentials: true,
+			reconnection: true,
+			reconnectionAttempts: 5,
+			reconnectionDelay: 1000,
+			query: userDbId ? { userDbId } : {},
+		});
 
-        this.socket.on('connect', () => {
-            console.log('✅ Game Socket connected:', this.socket?.id);
-        });
+		// --- LIFECYCLE EVENTS ---
+		this.socket.on("connect", () =>
+			console.log(
+				`🟢 [GameSocket] Connected! Socket ID: ${this.socket?.id}`,
+			),
+		);
+		this.socket.on("disconnect", (reason) =>
+			console.warn(`🔴 [GameSocket] Disconnected. Reason: ${reason}`),
+		);
 
-        // Logica di Ale per l'autenticazione
-        this.socket.on("unauthorized", async () => {
-            console.warn("🔐 Game Socket unauthorized");
-            const refreshed = await refreshToken();
-            if (refreshed) {
-                console.log("🔄 Reconnecting Game socket");
-                this.socket?.connect();
-            } else {
-                console.warn("🚪 Auth failed, cannot connect socket");
-                // Qui potresti triggerare un logout visivo se vuoi
-            }
-        });
+		// --- RECONNECTION EVENTS ---
+		this.socket.on("reconnect_attempt", (attempt) =>
+			console.log(`🔄 [GameSocket] Reconnect attempt #${attempt}...`),
+		);
+		this.socket.on("reconnect", (attempt) =>
+			console.log(
+				`✅ [GameSocket] Reconnected successfully after ${attempt} attempts`,
+			),
+		);
+		this.socket.on("reconnect_error", (error) =>
+			console.error(`❌ [GameSocket] Reconnect error:`, error.message),
+		);
+		this.socket.on("reconnect_failed", () =>
+			console.error(`💀 [GameSocket] Reconnection totally failed.`),
+		);
 
-        // Alcuni backend emettono connect_error invece di unauthorized
-        this.socket.on('connect_error', async (err) => {
-            console.warn('⚠️ Game Socket connect error:', err.message);
-            if (err.message === "unauthorized" || err.message === "Authentication error") {
-                const refreshed = await refreshToken();
-                if (refreshed) this.socket?.connect();
-            }
-        });
+		this.socket.on("connect_error", async (err) => {
+			console.error(`❌ [GameSocket] Connect Error:`, err.message);
+			if (
+				err.message === "unauthorized" ||
+				err.message === "Authentication error"
+			) {
+				console.log("🔄 [GameSocket] Attempting token refresh...");
+				const refreshed = await refreshToken();
+				if (refreshed) {
+					console.log(
+						"✅ [GameSocket] Token refreshed, reconnecting...",
+					);
+					this.socket?.connect();
+				} else {
+					console.error("🚫 [GameSocket] Token refresh failed.");
+				}
+			}
+		});
 
-        this.socket.on('disconnect', (reason) => {
-            console.log('❌ Game Socket disconnected:', reason);
-        });
+		this.socket.on("unauthorized", async () => {
+			console.warn("🔐 [GameSocket] Unauthorized event received.");
+			const refreshed = await refreshToken();
+			if (refreshed) {
+				console.log("🔄 [GameSocket] Reconnecting after auth fix...");
+				this.socket?.connect();
+			}
+		});
 
-        return this.socket;
-    }
+		return this.socket;
+	}
 
-    disconnect() {
-        if (this.socket) {
-            this.socket.disconnect();
-            this.socket = null;
-            console.log('Socket was disconnected');
-        }
-    }
+	disconnect() {
+		if (this.socket) {
+			console.log("🟠 [GameSocket] Manual disconnect triggered.");
+			this.socket.disconnect();
+			this.socket = null;
+		}
+	}
 
-    emit(event: GameEvents, data?: any) {
-        if (!this.socket) {
-            console.error('Cannot emit: socket not connected.');
-        }
-        this.socket?.emit(event, data);
-    }
+	emit(event: GameEvents, data?: any) {
+		if (!this.socket) {
+			console.error(
+				`⚠️ [GameSocket] Cannot emit '${event}': not connected.`,
+			);
+			return;
+		}
 
-    on(event: GameEvents, callback: (data: any) => void) {
-        if (!this.socket) return;
-        this.socket.on(event, callback);
-    }
+		// FILTRO ANTI-SPAM: Non logghiamo gli input fisici (viaggiano 20 volte al secondo)
+		if (event !== GameEvents.INPUT) {
+			console.log(`↗️ [GameSocket] Emitting [${event}]:`, data);
+		}
 
-    off(event: GameEvents, callback?: (data: any) => void) {
-        if (!this.socket) return;
-        this.socket.off(event, callback);
-    }
+		this.socket.emit(event, data);
+	}
+
+	on(event: GameEvents, callback: (data: any) => void) {
+		if (!this.socket) return;
+
+		// Wrappiamo la callback per intercettare i dati in arrivo
+		this.socket.on(event, (data) => {
+			// FILTRO ANTI-SPAM: Non logghiamo il GAME_STATE (arriva 16 volte al secondo)
+			if (event !== GameEvents.GAME_STATE) {
+				console.log(`↙️ [GameSocket] Received [${event}]:`, data);
+			}
+			callback(data);
+		});
+	}
+
+	off(event: GameEvents, callback?: (data: any) => void) {
+		if (!this.socket) return;
+		console.log(`🔇 [GameSocket] Removing listener for [${event}]`);
+		this.socket.off(event, callback);
+	}
 }
 export const socketService = new SocketService();
-===== src/services/matchmakingSocket.ts =====
-// frontend/src/services/matchmakingSocket.ts
-import { io, Socket } from 'socket.io-client';
-import { GameEvents } from '../game/game.events';
-import { refreshToken } from '../site/services/authService';
+
+=== src/services/matchmakingSocket.ts ===
+import { io, Socket } from "socket.io-client";
+import { GameEvents } from "../game/game.events";
+import { refreshToken } from "../site/services/authService";
 
 class MatchmakingSocket {
-  private socket: Socket | null = null;
+	private socket: Socket | null = null;
 
-  connect(): Socket {
-    if (this.socket?.connected) return this.socket;
+	connect(): Socket {
+		if (this.socket?.connected) {
+			console.log("🔵 [Matchmaking] Already connected.");
+			return this.socket;
+		}
 
-    this.socket = io('/', { 
-      path: "/matchmaking_api/socket.io",
-      transports: ['websocket', 'polling'],
-      withCredentials: true, // FONDAMENTALE PER IL JWT
-      reconnection: false,
-    });
+		console.log("🟡 [Matchmaking] Initiating connection...");
+		this.socket = io("/", {
+			path: "/ws/matchmaking/socket.io",
+			transports: ["websocket", "polling"],
+			withCredentials: true,
+			reconnection: false, // Se cade, esce dalla coda
+		});
 
-    this.socket.on('connect', () => {
-      console.log('✅ [Matchmaking] Connected. Socket ID:', this.socket?.id);
-    });
+		// --- LIFECYCLE EVENTS ---
+		this.socket.on("connect", () =>
+			console.log(
+				`🟢 [Matchmaking] Connected! Socket ID: ${this.socket?.id}`,
+			),
+		);
+		this.socket.on("disconnect", (reason) =>
+			console.warn(`🔴 [Matchmaking] Disconnected. Reason: ${reason}`),
+		);
 
-    // Logica di Ale
-    this.socket.on("unauthorized", async () => {
-        console.warn("🔐 [Matchmaking] Socket unauthorized");
-        const refreshed = await refreshToken();
-        if (refreshed) {
-            console.log("🔄 Reconnecting Matchmaking socket");
-            this.socket?.connect();
-        }
-    });
+		this.socket.on("connect_error", async (error) => {
+			console.error(`❌ [Matchmaking] Connection Error:`, error.message);
+			if (
+				error.message === "unauthorized" ||
+				error.message === "Authentication error"
+			) {
+				console.log("🔄 [Matchmaking] Attempting token refresh...");
+				const refreshed = await refreshToken();
+				if (refreshed) {
+					console.log(
+						"✅ [Matchmaking] Token refreshed, reconnecting...",
+					);
+					this.socket?.connect();
+				} else {
+					console.error("🚫 [Matchmaking] Token refresh failed.");
+				}
+			}
+		});
 
-    this.socket.on('connect_error', async (error) => {
-      console.warn('⚠️ [Matchmaking] Connection error:', error.message);
-      if (error.message === "unauthorized" || error.message === "Authentication error") {
-          const refreshed = await refreshToken();
-          if (refreshed) this.socket?.connect();
-      }
-    });
+		this.socket.on("unauthorized", async () => {
+			console.warn("🔐 [Matchmaking] Unauthorized event received.");
+			const refreshed = await refreshToken();
+			if (refreshed) {
+				console.log("🔄 [Matchmaking] Reconnecting after auth fix...");
+				this.socket?.connect();
+			}
+		});
 
-    this.socket.on('disconnect', (reason) => {
-      console.log('❌ [Matchmaking] Disconnected:', reason);
-    });
+		return this.socket;
+	}
 
-    return this.socket;
-  }
+	disconnect() {
+		if (this.socket) {
+			console.log(
+				"🟠 [Matchmaking] Manual disconnect triggered (Left queue).",
+			);
+			this.socket.disconnect();
+			this.socket = null;
+		}
+	}
 
-  disconnect() {
-    if (this.socket) {
-      this.socket.disconnect();
-      this.socket = null;
-      console.log('[Matchmaking] Socket closed (left queue)');
-    }
-  }
+	emit(event: GameEvents, data?: any) {
+		if (!this.socket) {
+			console.error(
+				`⚠️ [Matchmaking] Cannot emit '${event}': not connected.`,
+			);
+			return;
+		}
+		console.log(`↗️ [Matchmaking] Emitting [${event}]:`, data);
+		this.socket.emit(event, data);
+	}
 
-  emit(event: GameEvents, data?: any) {
-    if (!this.socket) return;
-    this.socket.emit(event, data);
-  }
+	on(event: GameEvents | string, callback: (data: any) => void) {
+		if (!this.socket) return;
 
-  on(event: GameEvents | string, callback: (data: any) => void) {
-    if (!this.socket) return;
-    this.socket.on(event, callback);
-  }
+		// Wrappiamo la callback per intercettare e loggare i dati in arrivo
+		this.socket.on(event, (data) => {
+			console.log(`↙️ [Matchmaking] Received [${event}]:`, data);
+			callback(data);
+		});
+	}
 
-  off(event: GameEvents | string, callback?: (data: any) => void) {
-    if (!this.socket) return;
-    this.socket.off(event, callback);
-  }
+	off(event: GameEvents | string, callback?: (data: any) => void) {
+		if (!this.socket) return;
+		console.log(`🔇 [Matchmaking] Removing listener for [${event}]`);
+		this.socket.off(event, callback);
+	}
 
-  getSocket(): Socket | null {
-    return this.socket;
-  }
+	getSocket(): Socket | null {
+		return this.socket;
+	}
 }
 
 export const matchmakingSocket = new MatchmakingSocket();
-===== src/hooks/useGameSocket.ts =====
+
+=== src/hooks/useGameSocket.ts ===
 import { useEffect, useState } from 'react';
 import { socketService } from '../services/socketServices';
 import { GameEvents } from '../game/game.events';
 import { PlayerSnapshot, BulletSnapshot, GameStatePayload, GameOverPayload, MapEmitPayload } from '../types/game.types';
 import { log } from '../configs/logger';
+import { useGameStore } from '../storage/gameStore';
 
 interface UseGameSocketReturn {
   isConnected: boolean;
   world: MapEmitPayload | null;
-  gameState: GameStatePayload | null;
   gameOver: GameOverPayload | null;
 }
 
 export function useGameSocket(): UseGameSocketReturn {
   const [isConnected, setIsConnected] = useState(false);
   const [world, setWorld] = useState<MapEmitPayload | null>(null);
-  const [gameState, setGameState] = useState<GameStatePayload | null>(null);
   const [gameOver, setGameOver] = useState<GameOverPayload | null>(null);
 
   useEffect(() => {
@@ -6347,7 +6557,7 @@ export function useGameSocket(): UseGameSocketReturn {
         characterName: Array.isArray(b.characterName) ? b.characterName[0] : b.characterName,
       }));
     
-      setGameState({ players, bullets, time: payload.time || 0 });
+      useGameStore.getState().setGameState({ players, bullets, time: payload.time || 0 });
     };
 
     const handleGameOver = (payload: any) => {
@@ -6384,5 +6594,5 @@ export function useGameSocket(): UseGameSocketReturn {
     };
   }, []);
 
-  return { isConnected, world, gameState, gameOver };
+  return { isConnected, world, gameOver };
 }

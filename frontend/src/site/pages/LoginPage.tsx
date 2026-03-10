@@ -23,11 +23,34 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
 
     try {
       if (mode === "login") {
-        const { ok, data } = await authService.login(
-          formData.username, formData.password, show2fa ? formData.totp : undefined
-        );
-        if (data.requires2fa) { setShow2fa(true); setLoading(false); return; }
-        if (ok) { onLogin(); } else { setError(data.message || data.error || "Login failed"); }
+        
+        // ⚡ SE LA 2FA È GIÀ VISIBILE, VERIFICHIAMO SOLO IL CODICE
+        if (show2fa) {
+          const { ok, data } = await authService.verify2fa(formData.totp);
+          if (ok) {
+            onLogin(); // Codice corretto, entra!
+          } else {
+            setError(data.message || data.error || "Invalid 2FA code");
+          }
+          setLoading(false);
+          return;
+        }
+
+        // ⚡ ALTRIMENTI, FACCIAMO IL LOGIN NORMALE
+        const { ok, data } = await authService.login(formData.username, formData.password);
+        
+        // Se il backend ci dice che serve la 2FA (tramite un flag o uno status code)
+        if (data.requires2fa || data.message === '2FA required') { 
+          setShow2fa(true); 
+          setLoading(false); 
+          return; 
+        }
+        
+        if (ok) { 
+          onLogin(); 
+        } else { 
+          setError(data.message || data.error || "Login failed"); 
+        }
 
       } else if (mode === "register") {
         const { ok, data } = await authService.register(formData.username, formData.email, formData.password);
@@ -55,7 +78,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
       alignItems: "center", 
       justifyContent: "center",
       backgroundColor: theme.colors.bgDark,
-      backgroundImage: `radial-gradient(circle at center, rgba(200,170,110,0.06) 0%, transparent 60%), radial-gradient(circle at 20% 80%, rgba(10,200,185,0.04) 0%, transparent 90%), url(${welcomeScene})`,
+      backgroundImage: `radial-gradient(circle at center, rgba(200,170,110,0.4) 0%, transparent 60%), radial-gradient(circle at 20% 80%, rgba(10,200,185,0.04) 0%, transparent 90%), url(${welcomeScene})`,
       backgroundSize: 'cover',
       backgroundPosition: 'center',
       backgroundRepeat: 'no-repeat',
@@ -78,7 +101,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
         width: "440px", 
         height: "440px", 
         borderRadius: "50%",
-        background: `radial-gradient(circle at center, ${theme.colors.bgPanel}00 0%, ${theme.colors.bgDark}00 70%)`,
+        background: `radial-gradient(circle at center, ${theme.colors.bgPanel}00 20%, ${theme.colors.bgDark}00 70%)`,
         transform: 'translateY(70px)',
         border: `1px solid ${theme.colors.border}`, 
         animation: "orbPulse 4s ease-in-out infinite",

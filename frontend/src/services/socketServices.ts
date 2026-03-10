@@ -1,87 +1,133 @@
-// frontend/src/services/socketServices.ts
-import { io, Socket } from 'socket.io-client';
-import { GameEvents } from '../game/game.events';
-import { refreshToken } from '../site/services/authService';
+import { io, Socket } from "socket.io-client";
+import * as msgpackParser from "socket.io-msgpack-parser";
+import { GameEvents } from "../game/game.events";
+import { refreshToken } from "../site/services/authService";
 
 export class SocketService {
-    private socket: Socket | null = null;
+	private socket: Socket | null = null;
 
-    public getSocket(): Socket | null {
-        return this.socket;
-    }
+	public getSocket(): Socket | null {
+		return this.socket;
+	}
 
-    connect(url: string, userDbId?: string): Socket {
-        if (this.socket?.connected) {
-            console.log('Already connected.');
-            return this.socket;
-        }
+	connect(url: string, userDbId?: string): Socket {
+		if (this.socket?.connected) {
+			console.log("🔵 [GameSocket] Already connected.");
+			return this.socket;
+		}
 
-        this.socket = io(url, {
-            path: "/game_api/socket.io",
-            transports: ['websocket', 'polling'], // Come da codice di Ale
-            withCredentials: true,                // FONDAMENTALE PER IL JWT
-            reconnection: true,
-            reconnectionAttempts: 5,
-            reconnectionDelay: 1000,
-            query: userDbId ? { userDbId } : {},
-        });
+		console.log(
+			`🟡 [GameSocket] Initiating connection for UserDB ID: ${userDbId || "None"}...`,
+		);
+		this.socket = io(url, {
+			path: "/ws/game/socket.io",
+			transports: ["websocket", "polling"],
+			parser: msgpackParser,
+			withCredentials: true,
+			reconnection: true,
+			reconnectionAttempts: 5,
+			reconnectionDelay: 1000,
+			query: userDbId ? { userDbId } : {},
+		});
 
-        this.socket.on('connect', () => {
-            console.log('✅ Game Socket connected:', this.socket?.id);
-        });
+		// --- LIFECYCLE EVENTS ---
+		this.socket.on("connect", () =>
+			console.log(
+				`🟢 [GameSocket] Connected! Socket ID: ${this.socket?.id}`,
+			),
+		);
+		this.socket.on("disconnect", (reason) =>
+			console.warn(`🔴 [GameSocket] Disconnected. Reason: ${reason}`),
+		);
 
-        // Logica di Ale per l'autenticazione
-        this.socket.on("unauthorized", async () => {
-            console.warn("🔐 Game Socket unauthorized");
-            const refreshed = await refreshToken();
-            if (refreshed) {
-                console.log("🔄 Reconnecting Game socket");
-                this.socket?.connect();
-            } else {
-                console.warn("🚪 Auth failed, cannot connect socket");
-                // Qui potresti triggerare un logout visivo se vuoi
-            }
-        });
+		// --- RECONNECTION EVENTS ---
+		this.socket.on("reconnect_attempt", (attempt) =>
+			console.log(`🔄 [GameSocket] Reconnect attempt #${attempt}...`),
+		);
+		this.socket.on("reconnect", (attempt) =>
+			console.log(
+				`✅ [GameSocket] Reconnected successfully after ${attempt} attempts`,
+			),
+		);
+		this.socket.on("reconnect_error", (error) =>
+			console.error(`❌ [GameSocket] Reconnect error:`, error.message),
+		);
+		this.socket.on("reconnect_failed", () =>
+			console.error(`💀 [GameSocket] Reconnection totally failed.`),
+		);
 
-        // Alcuni backend emettono connect_error invece di unauthorized
-        this.socket.on('connect_error', async (err) => {
-            console.warn('⚠️ Game Socket connect error:', err.message);
-            if (err.message === "unauthorized" || err.message === "Authentication error") {
-                const refreshed = await refreshToken();
-                if (refreshed) this.socket?.connect();
-            }
-        });
+		this.socket.on("connect_error", async (err) => {
+			console.error(`❌ [GameSocket] Connect Error:`, err.message);
+			if (
+				err.message === "unauthorized" ||
+				err.message === "Authentication error"
+			) {
+				console.log("🔄 [GameSocket] Attempting token refresh...");
+				const refreshed = await refreshToken();
+				if (refreshed) {
+					console.log(
+						"✅ [GameSocket] Token refreshed, reconnecting...",
+					);
+					this.socket?.connect();
+				} else {
+					console.error("🚫 [GameSocket] Token refresh failed.");
+				}
+			}
+		});
 
-        this.socket.on('disconnect', (reason) => {
-            console.log('❌ Game Socket disconnected:', reason);
-        });
+		this.socket.on("unauthorized", async () => {
+			console.warn("🔐 [GameSocket] Unauthorized event received.");
+			const refreshed = await refreshToken();
+			if (refreshed) {
+				console.log("🔄 [GameSocket] Reconnecting after auth fix...");
+				this.socket?.connect();
+			}
+		});
 
-        return this.socket;
-    }
+		return this.socket;
+	}
 
-    disconnect() {
-        if (this.socket) {
-            this.socket.disconnect();
-            this.socket = null;
-            console.log('Socket was disconnected');
-        }
-    }
+	disconnect() {
+		if (this.socket) {
+			console.log("🟠 [GameSocket] Manual disconnect triggered.");
+			this.socket.disconnect();
+			this.socket = null;
+		}
+	}
 
-    emit(event: GameEvents, data?: any) {
-        if (!this.socket) {
-            console.error('Cannot emit: socket not connected.');
-        }
-        this.socket?.emit(event, data);
-    }
+	emit(event: GameEvents, data?: any) {
+		if (!this.socket) {
+			console.error(
+				`⚠️ [GameSocket] Cannot emit '${event}': not connected.`,
+			);
+			return;
+		}
 
-    on(event: GameEvents, callback: (data: any) => void) {
-        if (!this.socket) return;
-        this.socket.on(event, callback);
-    }
+		// FILTRO ANTI-SPAM: Non logghiamo gli input fisici (viaggiano 20 volte al secondo)
+		if (event !== GameEvents.INPUT) {
+			console.log(`↗️ [GameSocket] Emitting [${event}]:`, data);
+		}
 
-    off(event: GameEvents, callback?: (data: any) => void) {
-        if (!this.socket) return;
-        this.socket.off(event, callback);
-    }
+		this.socket.emit(event, data);
+	}
+
+	on(event: GameEvents, callback: (data: any) => void) {
+		if (!this.socket) return;
+
+		// Wrappiamo la callback per intercettare i dati in arrivo
+		this.socket.on(event, (data) => {
+			// FILTRO ANTI-SPAM: Non logghiamo il GAME_STATE (arriva 16 volte al secondo)
+			if (event !== GameEvents.GAME_STATE) {
+				console.log(`↙️ [GameSocket] Received [${event}]:`, data);
+			}
+			callback(data);
+		});
+	}
+
+	off(event: GameEvents, callback?: (data: any) => void) {
+		if (!this.socket) return;
+		console.log(`🔇 [GameSocket] Removing listener for [${event}]`);
+		this.socket.off(event, callback);
+	}
 }
 export const socketService = new SocketService();

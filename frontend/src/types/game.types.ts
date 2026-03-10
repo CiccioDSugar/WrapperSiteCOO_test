@@ -1,6 +1,9 @@
 // types/game.types.ts
 // Mirrors backend interfaces — keep in sync manually.
 
+import { CharacterName, EndReason, MatchMode, MatchType } from '@transcendence/types';
+export { CharacterName, EndReason, MatchMode, MatchType };
+
 export interface Vector {
   x: number;
   z: number;
@@ -20,36 +23,12 @@ export enum BulletHit {
   NONE       = 'none',
 }
 
-export enum CharacterName {
-  ADE     = 'ade',
-  ZEUS    = 'zeus',
-  DEFAULT = 'default',
-}
-
-export enum EndReason {
-  TIMEOUT     = 'timeout',
-  RESIGNATION = 'resignation',
-  KILLOUT     = 'killout',
-}
-
-export enum MatchMode {
-  RANKED   = 'ranked',
-  UNRANKED = 'unranked',
-  LOCAL    = 'local',
-  AI       = 'ai',
-}
-
-export enum MatchType {
-  TEAM = 'team',
-  FFA  = 'ffa',
-}
-
 // --- Snapshot: what the server sends every tick ---
 
 export interface PlayerSnapshot {
   id: string;
   type: string;
-  characterName: string;
+  characterName: CharacterName;
   teamId: number;
   position: Vector;
   rotation: number;
@@ -67,7 +46,7 @@ export interface PlayerSnapshot {
 export interface BulletSnapshot {
   type: string;
   id: string;
-  characterName: string;
+  characterName: CharacterName;
   position: Vector;
   hit: BulletHit;
 }
